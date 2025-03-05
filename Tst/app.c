@@ -35,9 +35,13 @@ void SPI_Config(void) {
     SPI1->CR1 |= SPI_CR1_SPE;
 }
 
-uint8_t SPI_TransmitReceive(uint8_t data) {
+uint8_t SPI_TransmitReceive(uint8_t data)
+ {
     // Ждем, пока не будет готово устройство для передачи
-    while (!(SPI1->SR & SPI_SR_TXE)); // Ждём, пока TXE станет 1
+    while (!(SPI1->SR & SPI_SR_TXE))
+		{
+		
+		}; // Ждём, пока TXE станет 1
     SPI1->DR = data;                  // Отправляем данные
 
     // Ждем, пока данные не будут приняты
@@ -49,12 +53,18 @@ int main(void) {
     GPIO_Config();    // Настраиваем GPIO
     SPI_Config();     // Настраиваем SPI1
 
-    uint8_t sendData = 0xA5; // Данные для отправки
+    uint8_t sendData = 0xA7; // Данные для отправки
     uint8_t receivedData = 0;
+		uint8_t receivedData2 = 0;
 
-    while (1) {
+    while (1)
+		{
+//				for(int i=0; i<10000;i++)
+//				{
+//				};
         receivedData = SPI_TransmitReceive(sendData); // Передаем и получаем данные
-        // Здесь вы можете использовать receivedData, например, передать его куда-то или вывести на экран
+        receivedData2=receivedData;
+				// Здесь вы можете использовать receivedData, например, передать его куда-то или вывести на экран
     }
 
     return 0;
