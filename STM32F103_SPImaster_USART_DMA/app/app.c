@@ -1,39 +1,42 @@
 #include "app.h"
 
+uint8_t sendData = 0xA5; 
+uint8_t receivedData = 0;
+
 int main()
 {
 	int count=0;
+	Init_USART(BAUND_RATE);
 	Init_SPI();
 	
 	while(1)
 	{
-		count++;
-		if(count<1)
-		{
-			//ExecutorTerminal();
-		}
-		if(count>10000)
-		{
-			count=0;
-		}
+		Receive_Data();
 	}
 	return 0;
 }
 
-void DMA1_Channel2_IRQHandler(void) 
+void Receive_Data()
 {
-    if (DMA1->ISR & DMA_ISR_TCIF2) 
+		SPI_Transmit(sendData);
+		receivedData=SPI_Receive();
+}
+
+//
+void DMA1_Channel4_IRQHandler() 
+{
+    if (DMA1->ISR & DMA_ISR_TCIF4) 
 		{
-        DMA1->IFCR |= DMA_IFCR_CTCIF2; // Очистка флага
+        DMA1->IFCR |= DMA_IFCR_CTCIF4; // Очистка флага
+				
     }
 		LED();
 }
 
-void DMA1_Channel3_IRQHandler() 
+void DMA1_Channel5_IRQHandler() 
 {
 		ExecutorTerminal();
 	  //
-		
 }
 
 void ExecutorTerminal()

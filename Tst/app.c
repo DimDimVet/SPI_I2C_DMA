@@ -53,7 +53,7 @@ int main(void) {
     GPIO_Config();    // Настраиваем GPIO
     SPI_Config();     // Настраиваем SPI1
 
-    uint8_t sendData = 0xA7; // Данные для отправки
+    uint8_t sendData = 0xA0; // Данные для отправки
     uint8_t receivedData = 0;
 		uint8_t receivedData2 = 0;
 
