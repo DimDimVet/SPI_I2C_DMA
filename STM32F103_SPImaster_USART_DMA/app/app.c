@@ -1,17 +1,22 @@
 #include "app.h"
 
-uint8_t sendData = 0xA5; 
-uint8_t receivedData = 0;
+char sendData = 0xA7; 
+char receivedData = 0;
 
 int main()
 {
 	int count=0;
 	Init_USART(BAUND_RATE);
 	Init_SPI();
-	
+	snprintf(rezultStr, sizeof rezultStr, "%s %c", tstSPIStr,sendData);
+	//SPI_Transmit(sendData);
+	DMA1_SPI_SetString(rezultStr);
+	DMA1_SPI_SetString(rezultStr);
 	while(1)
 	{
-		Receive_Data();
+	
+		//Receive_Data();
+		//delay_ms(10);
 	}
 	return 0;
 }
@@ -19,7 +24,39 @@ int main()
 void Receive_Data()
 {
 		SPI_Transmit(sendData);
-		receivedData=SPI_Receive();
+		
+		
+		if(receivedData!=0)
+		{
+			//sendData = 0xFE;
+			//SPI_Transmit(receivedData);
+		}
+
+		//receivedData=SPI_Receive();
+}
+
+
+void DMA1_Channel2_IRQHandler() 
+{
+    if (DMA1->ISR & DMA_ISR_TCIF2) 
+		{
+        DMA1->IFCR |= DMA_IFCR_CTCIF2; // Очистка флага
+    }
+		LED();
+}
+
+void DMA1_Channel3_IRQHandler() 
+{
+		if (DMA1->ISR & DMA_ISR_TCIF3) 
+		{
+        DMA1->IFCR |= DMA_IFCR_CTCIF3; // Очистка флага
+				
+				snprintf(rezultStr, sizeof rezultStr, "%s %c", tstSPIStr,sendData);
+				DMA1_SPI_SetString(rezultStr);
+				LED();
+    }
+		
+	  //
 }
 
 //
@@ -28,7 +65,6 @@ void DMA1_Channel4_IRQHandler()
     if (DMA1->ISR & DMA_ISR_TCIF4) 
 		{
         DMA1->IFCR |= DMA_IFCR_CTCIF4; // Очистка флага
-				
     }
 		LED();
 }

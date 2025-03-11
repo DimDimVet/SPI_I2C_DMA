@@ -6,16 +6,18 @@
 #include "stm32f4xx.h"                  // Device header
 
 void Init_USART(int baudRate);//main init usart
-void Enable_RCC_AHB1(void);//GpioA usart, GpioA pin7 LED
-void Enable_RCC_APB1(void);//Usart2
+void Enable_RCC(void);//GpioA usart, GpioA pin7 LED, USART1, DMA2
 void LED(void);//GpioA pin7 LED
 void Config_LED(void);//Config GpioA pin6 pin7 LED
 void Config_GPIO_USART(int baudRate);
+void Config_DMA1(void);
 
-int USART2_GetStatus();//status Rx
-char USART2_ReadChar();//read DR
+void read_dma(uint8_t *df, uint16_t size);
 
-void USART2_SetChar(char c);
-void USART2_SetString(char* str);
+int DMA2_GetStatus(void);//status Rx
+char DMA2_ReadChar(void);//read DR
+
+void DMA2_SetChar(char c);
+void DMA2_SetString(char* str);
 
 #endif

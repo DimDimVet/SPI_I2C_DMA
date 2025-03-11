@@ -7,10 +7,10 @@
 
   <Targets>
     <Target>
-      <TargetName>STM32F407_SPI_DMA_Rx</TargetName>
+      <TargetName>STM32F407_SPIslave_USART_DMA</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>6190000::V6.19::ARMCLANG</pCCUsed>
+      <pCCUsed>6160000::V6.16::ARMCLANG</pCCUsed>
       <uAC6>1</uAC6>
       <TargetOption>
         <TargetCommonOption>
@@ -49,7 +49,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\Objects\</OutputDirectory>
-          <OutputName>STM32F407_SPI_DMA_Rx</OutputName>
+          <OutputName>STM32F407_SPIslave_USART_DMA</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>0</CreateHexFile>
@@ -186,7 +186,6 @@
             <RvdsVP>2</RvdsVP>
             <RvdsMve>0</RvdsMve>
             <RvdsCdeCp>0</RvdsCdeCp>
-            <nBranchProt>0</nBranchProt>
             <hadIRAM2>1</hadIRAM2>
             <hadIROM2>0</hadIROM2>
             <StupSel>8</StupSel>
@@ -314,7 +313,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>1</Optim>
+            <Optim>2</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -326,11 +325,11 @@
             <wLevel>3</wLevel>
             <uThumb>0</uThumb>
             <uSurpInc>0</uSurpInc>
-            <uC99>1</uC99>
-            <uGnu>1</uGnu>
+            <uC99>0</uC99>
+            <uGnu>0</uGnu>
             <useXO>0</useXO>
             <v6Lang>3</v6Lang>
-            <v6LangP>1</v6LangP>
+            <v6LangP>3</v6LangP>
             <vShortEn>1</vShortEn>
             <vShortWch>1</vShortWch>
             <v6Lto>0</v6Lto>
@@ -340,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\STM32F407_SPI_DMA_Rx;.\inc</IncludePath>
+              <IncludePath>..\STM32F407_SPIslave_USART_DMA;.\inc</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -400,14 +399,19 @@
               <FilePath>.\inc\app.h</FilePath>
             </File>
             <File>
+              <FileName>init_USART.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\inc\init_USART.h</FilePath>
+            </File>
+            <File>
               <FileName>delay.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\inc\delay.h</FilePath>
             </File>
             <File>
-              <FileName>init_SPI.h</FileName>
+              <FileName>init_SPI_slave.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\inc\init_SPI.h</FilePath>
+              <FilePath>.\inc\init_SPI_slave.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -415,9 +419,14 @@
           <GroupName>init</GroupName>
           <Files>
             <File>
-              <FileName>init_SPI.c</FileName>
+              <FileName>init_USART.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\init\init_SPI.c</FilePath>
+              <FilePath>.\init\init_USART.c</FilePath>
+            </File>
+            <File>
+              <FileName>init_SPI_slave.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\init\init_SPI_slave.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -444,16 +453,16 @@
   <RTE>
     <apis/>
     <components>
-      <component Cclass="CMSIS" Cgroup="CORE" Cvendor="ARM" Cversion="5.6.0" condition="ARMv6_7_8-M Device">
-        <package name="CMSIS" schemaVersion="1.7.7" url="http://www.keil.com/pack/" vendor="ARM" version="5.9.0"/>
+      <component Cclass="CMSIS" Cgroup="CORE" Cvendor="ARM" Cversion="5.5.0" condition="ARMv6_7_8-M Device">
+        <package name="CMSIS" schemaVersion="1.3" url="http://www.keil.com/pack/" vendor="ARM" version="5.8.0"/>
         <targetInfos>
-          <targetInfo name="STM32F407_SPI_DMA_Rx"/>
+          <targetInfo name="STM32F407_SPIslave_USART_DMA"/>
         </targetInfos>
       </component>
       <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="2.6.3" condition="STM32F4 CMSIS">
         <package name="STM32F4xx_DFP" schemaVersion="1.6.3" url="http://www.keil.com/pack/" vendor="Keil" version="2.15.0"/>
         <targetInfos>
-          <targetInfo name="STM32F407_SPI_DMA_Rx"/>
+          <targetInfo name="STM32F407_SPIslave_USART_DMA"/>
         </targetInfos>
       </component>
     </components>
@@ -463,7 +472,7 @@
         <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="2.6.3" condition="STM32F4 CMSIS"/>
         <package name="STM32F4xx_DFP" schemaVersion="1.6.3" url="http://www.keil.com/pack/" vendor="Keil" version="2.15.0"/>
         <targetInfos>
-          <targetInfo name="STM32F407_SPI_DMA_Rx"/>
+          <targetInfo name="STM32F407_SPIslave_USART_DMA"/>
         </targetInfos>
       </file>
       <file attr="config" category="source" name="Drivers\CMSIS\Device\ST\STM32F4xx\Source\Templates\system_stm32f4xx.c" version="2.6.2">
@@ -471,7 +480,7 @@
         <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="2.6.3" condition="STM32F4 CMSIS"/>
         <package name="STM32F4xx_DFP" schemaVersion="1.6.3" url="http://www.keil.com/pack/" vendor="Keil" version="2.15.0"/>
         <targetInfos>
-          <targetInfo name="STM32F407_SPI_DMA_Rx"/>
+          <targetInfo name="STM32F407_SPIslave_USART_DMA"/>
         </targetInfos>
       </file>
     </files>
