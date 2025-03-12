@@ -8,10 +8,11 @@ int main()
 	int count=0;
 	Init_USART(BAUND_RATE);
 	Init_SPI();
-	snprintf(rezultStr, sizeof rezultStr, "%s %c", tstSPIStr,sendData);
+	//snprintf(rezultStr, sizeof rezultStr, "%s %c", tstSPIStr,sendData);
 	//SPI_Transmit(sendData);
-	DMA1_SPI_SetString(rezultStr);
-	DMA1_SPI_SetString(rezultStr);
+	//DMA1_SPI_SetString(rezultStr);
+	DMA1_SPI_SetString(tstSPIStr,10);
+	DMA1_SPI_GetString(tstSPIStr2,10);
 	while(1)
 	{
 	
@@ -50,9 +51,8 @@ void DMA1_Channel3_IRQHandler()
 		if (DMA1->ISR & DMA_ISR_TCIF3) 
 		{
         DMA1->IFCR |= DMA_IFCR_CTCIF3; // Очистка флага
-				
-				snprintf(rezultStr, sizeof rezultStr, "%s %c", tstSPIStr,sendData);
-				DMA1_SPI_SetString(rezultStr);
+
+				//DMA1_SPI_SetString(tstSPIStr);
 				LED();
     }
 		

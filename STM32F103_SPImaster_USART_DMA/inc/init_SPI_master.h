@@ -15,7 +15,8 @@ void Config_GPIO_SPI(void);//порты spi
 void Config_SPI(void);//spi
 void Config_SPI_DMA1(void);//spi dma
 
-void DMA1_SPI_SetString(char* str);
+void DMA1_SPI_GetString(char* str, int sizeSPITx);
+void DMA1_SPI_SetString(char* str, int sizeSPITx);
 void SPI_Transmit(uint8_t data);//spi Tx
 uint8_t SPI_Receive();//spi Rx
 

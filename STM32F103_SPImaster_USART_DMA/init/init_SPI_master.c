@@ -2,6 +2,7 @@
 
 int sizeSPITx, sizeSPIRx=100;
 char* dataBufSPIRx;
+//char* dataBufSPITx;
 
 void Init_SPI(void)//main init spi
 {
@@ -54,7 +55,9 @@ void  Config_SPI()
 		SPI1->CR1 |= SPI_CR1_BR_1;// f/4
 		SPI1->CR1 |= SPI_CR1_CPOL;// начальный фронт
 		SPI1->CR1 |= SPI_CR1_CPHA;// фаза...
-
+		SPI1->CR2 |=SPI_CR2_TXDMAEN;//переключили дма на spi - передача, DMAT = Tx
+		SPI1->CR2 |=SPI_CR2_RXDMAEN;//переключили дма на spi - чтение, DMAR = Rx
+		
     SPI1->CR1 |= SPI_CR1_SPE;//Вкл SPI
 }
 
@@ -63,51 +66,112 @@ void Config_SPI_DMA1()
 	dataBufSPIRx=malloc(sizeSPIRx * sizeof(char));
 	
 	//канал 3
-		DMA1_Channel3->CCR |= (DMA_CCR3_PL_0 //Приоритет канала
-													/*| DMA_CCR3_MSIZE_0*/ //Размер данных передатчика
-													| DMA_CCR3_MINC //Автоматическое увеличение адреса передатчика
-													| DMA_CCR3_DIR); // Направление передачи (от памяти к периферии
-    //DMA1_Channel3->CNDTR = sizeSPITx; // Количество данных
-    //DMA1_Channel3->CPAR = (uint32_t)&SPI1->DR; // Адрес регистра данных SPI
-    //DMA1_Channel3->CMAR = (uint32_t)dataBufTx; // Адрес буфера
-		DMA1_Channel3->CCR |= DMA_CCR3_TCIE;// разрешение прерыван
-    
+		DMA1_Channel3->CCR &= ~DMA_CCR3_EN;
 		
-		SPI1->CR2 |=SPI_CR2_TXDMAEN;//переключили дма на spi - передача, DMAT = Tx
+//		DMA1_Channel3->CPAR = (uint32_t)(&SPI1->DR); //заносим адрес регистра DR в CPAR
+//		DMA1_Channel3->CMAR = (uint32_t)dataBufSPITx; //заносим адрес данных в регистр CMAR
+//		DMA1_Channel3->CNDTR = sizeSPITx; //количество передаваемых данных
+		
+		DMA1_Channel3->CCR |=DMA_CCR3_PL_0; //Приоритет канала
+		DMA1_Channel3->CCR |=DMA_CCR3_MSIZE_0;//разрядность данных в памяти 8 би
+		DMA1_Channel3->CCR |=DMA_CCR3_PSIZE;//разрядность регистра данных 16 бит
+		DMA1_Channel3->CCR |=DMA_CCR3_MINC; //Автоматическое увеличение адреса передатчика
+		//DMA1_Channel3->CCR |=DMA_CCR3_PINC; //Автоматическое увеличение адреса передатчика
+		//DMA1_Channel3->CCR |=DMA_CCR3_CIRC;///кольцевой режим 
+		DMA1_Channel3->CCR |=DMA_CCR3_DIR;// Направление передачи (от памяти к периферии
+		DMA1_Channel3->CCR |= DMA_CCR3_TCIE;// разрешение прерыван
 		DMA1_Channel3->CCR |= DMA_CCR3_EN; // Включение канала DMA
-		DMA1->IFCR |= DMA_IFCR_CTCIF3;//сбрасываем флаг прерывания
+		
+//		DMA1_Channel3->CCR |= (DMA_CCR3_PL_0 //Приоритет канала
+//													| DMA_CCR3_MSIZE_0//разрядность данных в памяти 8 бит
+//													| DMA_CCR2_PSIZE//разрядность регистра данных 16 бит
+//													| DMA_CCR3_MINC //Автоматическое увеличение адреса передатчика
+//													| DMA_CCR3_DIR); // Направление передачи (от памяти к периферии
+//    //DMA1_Channel3->CNDTR = sizeSPITx; // Количество данных
+//    //DMA1_Channel3->CPAR = (uint32_t)&SPI1->DR; // Адрес регистра данных SPI
+//    //DMA1_Channel3->CMAR = (uint32_t)dataBufTx; // Адрес буфера
+//		DMA1_Channel3->CCR |= DMA_CCR3_TCIE;// разрешение прерыван
+//    
+//		
+//		SPI1->CR2 |=SPI_CR2_TXDMAEN;//переключили дма на spi - передача, DMAT = Tx
+//		
+//		DMA1_Channel3->CCR |= DMA_CCR3_EN; // Включение канала DMA
+		//DMA1->IFCR |= DMA_IFCR_CTCIF3;//сбрасываем флаг прерывания
 		NVIC_EnableIRQ(DMA1_Channel3_IRQn); // Включение прерываний DMA
+
 	
 	//канал 2
-		DMA1_Channel2->CCR |= (DMA_CCR2_PL_0 //Приоритет канала
-													| DMA_CCR2_PSIZE //Размер данных источника
-													| DMA_CCR2_PINC //Автоматическое увеличение адреса источника
-													| DMA_CCR2_CIRC); // циклический режим
-    DMA1_Channel2->CNDTR = sizeSPIRx; // Количество данных
-    DMA1_Channel2->CPAR = (uint32_t)&SPI1->DR; // Адрес регистра данных SPI
-    DMA1_Channel2->CMAR = (uint32_t)dataBufSPIRx; // Адрес буфера
+		DMA1_Channel2->CCR &= ~DMA_CCR2_EN;
+		
+		DMA1_Channel2->CPAR = (uint32_t)(&SPI1->DR); //заносим адрес регистра DR в CPAR
+		DMA1_Channel2->CMAR = (uint32_t)dataBufSPIRx; //заносим адрес данных в регистр CMAR
+		DMA1_Channel2->CNDTR = sizeSPIRx; //количество передаваемых данных
+		
+		DMA1_Channel2->CCR |=DMA_CCR2_PL_0; //Приоритет канала
+		DMA1_Channel2->CCR |=DMA_CCR2_MSIZE_0;//разрядность данных в памяти 8 би
+		DMA1_Channel2->CCR |=DMA_CCR2_PSIZE;//разрядность регистра данных 16 бит
+		DMA1_Channel2->CCR |=DMA_CCR2_MINC; //Автоматическое увеличение адреса передатчика
+		//DMA1_Channel2->CCR |=DMA_CCR2_PINC; //Автоматическое увеличение адреса передатчика
+		//DMA1_Channel2->CCR |=DMA_CCR2_CIRC;///кольцевой режим 
+		//DMA1_Channel2->CCR |=DMA_CCR2_DIR;// Направление передачи (от памяти к периферии
 		DMA1_Channel2->CCR |= DMA_CCR2_TCIE;// разрешение прерыван
-    
-		
-		SPI1->CR2 |=SPI_CR2_RXDMAEN;//переключили дма на spi - чтение, DMAR = Rx
 		DMA1_Channel2->CCR |= DMA_CCR2_EN; // Включение канала DMA
+	
+	
+//		DMA1_Channel2->CCR |= (DMA_CCR2_PL_0 //Приоритет канала
+//													| DMA_CCR2_PSIZE //Размер данных источника
+//													| DMA_CCR2_PINC //Автоматическое увеличение адреса источника
+//													| DMA_CCR2_CIRC); // циклический режим
+//    DMA1_Channel2->CNDTR = sizeSPIRx; // Количество данных
+//    DMA1_Channel2->CPAR = (uint32_t)&SPI1->DR; // Адрес регистра данных SPI
+//    DMA1_Channel2->CMAR = (uint32_t)dataBufSPIRx; // Адрес буфера
+//		DMA1_Channel2->CCR |= DMA_CCR2_TCIE;// разрешение прерыван
+//    
+//		
+//		//SPI1->CR2 |=SPI_CR2_RXDMAEN;//переключили дма на spi - чтение, DMAR = Rx
+//		
+//		DMA1_Channel2->CCR |= DMA_CCR2_EN; // Включение канала DMA
 		
-		DMA1->IFCR |= DMA_IFCR_CTCIF2;//сбрасываем флаг прерывания
+		//DMA1->IFCR |= DMA_IFCR_CTCIF2;//сбрасываем флаг прерывания
 		NVIC_EnableIRQ(DMA1_Channel2_IRQn); // Включение прерываний DMA
 
 }
 
-void DMA1_SPI_SetString(char* str)//Установка строки по символьно
+void DMA1_SPI_SetString(char* str, int sizeSPITx)//Установка строки по символьно
 {
-		SPI1->CR1 &= ~ SPI_CR1_SPE;
 		DMA1_Channel3->CCR &= ~DMA_CCR3_EN;
-		delay_ms(100);
-		sizeSPITx = strlen(str);
 
-		DMA1_Channel3->CNDTR=sizeSPITx;// Количество данных
-		DMA1_Channel3->CMAR = (uint32_t)str;// Адрес буфера
-		SPI1->CR1 |= SPI_CR1_SPE;//Вкл SPI
-		DMA1_Channel3->CPAR = (uint32_t)&SPI1->DR;
+		//sizeSPITx = strlen(str);
+		
+		DMA1_Channel3->CPAR = (uint32_t)(&SPI1->DR); //заносим адрес регистра DR в CPAR
+		DMA1_Channel3->CMAR = (uint32_t)str; //заносим адрес данных в регистр CMAR
+		DMA1_Channel3->CNDTR = sizeSPITx; //количество передаваемых данных
+
+		DMA1_Channel3->CCR |= DMA_CCR3_EN;// Включение канала DMA
+}
+
+void DMA1_SPI_GetString(char* str, int sizeSPITx)//Установка строки по символьно
+{
+		static char filler = 0xFF;
+		//sizeSPITx = strlen(str);
+		
+		DMA1_Channel2->CCR &= ~DMA_CCR2_EN;
+	
+		DMA1_Channel2->CPAR = (uint32_t)(&SPI1->DR); //заносим адрес регистра DR в CPAR
+		DMA1_Channel2->CMAR = (uint32_t)str; //заносим адрес данных в регистр CMAR
+		DMA1_Channel2->CNDTR = sizeSPITx; //количество передаваемых данных
+
+		DMA1_Channel2->CCR |= DMA_CCR2_EN;// Включение канала DMA
+
+
+		DMA1_Channel3->CCR &= ~DMA_CCR3_EN;
+
+		DMA1_Channel3->CCR &=~DMA_CCR3_MINC;
+		
+		DMA1_Channel3->CPAR = (uint32_t)(&SPI1->DR); //заносим адрес регистра DR в CPAR
+		DMA1_Channel3->CMAR = (uint32_t)(&filler); //заносим адрес данных в регистр CMAR
+		DMA1_Channel3->CNDTR = sizeSPITx; //количество передаваемых данных
+
 		DMA1_Channel3->CCR |= DMA_CCR3_EN;// Включение канала DMA
 }
 

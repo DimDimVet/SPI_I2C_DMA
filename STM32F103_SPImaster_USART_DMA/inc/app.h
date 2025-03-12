@@ -15,6 +15,7 @@ char receivedChar;
 char* greetingsStr="Prived STM32F103";
 char* partingStr="BayBay STM32F103";
 char* tstSPIStr="Cicl Tx test Data out STM32F103";
+char* tstSPIStr2="";
 char* errorStr="error command";
 
 void ExecutorTerminal(void);

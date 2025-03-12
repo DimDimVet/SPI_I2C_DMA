@@ -72,61 +72,103 @@
 
 
 #include "stm32f10x.h"  // Подключите заголовочный файл для STM32F103
+uint8_t data[10];
 
-   void DMA1_Channel3_IRQHandler(void) {
-       if (DMA1->ISR & DMA_ISR_TCIF3) {
-           // Обработка завершения передачи
-           DMA1->IFCR |= DMA_IFCR_CTCIF3; // Сбрасываем флаг
-       }
-   }
+void SPIInit(void)
+{
+  RCC->APB2ENR |= RCC_APB2ENR_SPI1EN; //Включаем тактирование SPI1
+  RCC->APB2ENR |= RCC_APB2ENR_IOPAEN; //включаем тактирование порта GPIOA
+  RCC->AHBENR |= RCC_AHBENR_DMA1EN; //Включаем тактирование DMA1
+  
+  //Настройка GPIO
+  
+  //PA7 - MOSI
+  //PA6 - MISO
+  //PA5 - SCK
+  //Для начала сбрасываем все конфигурационные биты в нули
+  GPIOA->CRL &= ~(GPIO_CRL_CNF5_Msk | GPIO_CRL_MODE5_Msk 
+                | GPIO_CRL_CNF6_Msk | GPIO_CRL_MODE6_Msk
+                | GPIO_CRL_CNF7_Msk | GPIO_CRL_MODE7_Msk);
+  
+  //Настраиваем
+  //SCK: MODE5 = 0x03 (11b); CNF5 = 0x02 (10b)
+  GPIOA->CRL |= (0x02<<GPIO_CRL_CNF5_Pos) | (0x03<<GPIO_CRL_MODE5_Pos);
+  
+  //MISO: MODE6 = 0x00 (00b); CNF6 = 0x01 (01b)
+  GPIOA->CRL |= (0x01<<GPIO_CRL_CNF6_Pos) | (0x00<<GPIO_CRL_MODE6_Pos);
+  
+  //MOSI: MODE7 = 0x03 (11b); CNF7 = 0x02 (10b)
+  GPIOA->CRL |= (0x02<<GPIO_CRL_CNF7_Pos) | (0x03<<GPIO_CRL_MODE7_Pos);
+  
+  
+  //Настройка SPI
+  SPI1->CR1 = 0<<SPI_CR1_DFF_Pos  //Размер кадра 8 бит
+    | 0<<SPI_CR1_LSBFIRST_Pos     //MSB first
+    | 1<<SPI_CR1_SSM_Pos          //Программное управление SS
+    | 1<<SPI_CR1_SSI_Pos          //SS в высоком состоянии
+    | 0x04<<SPI_CR1_BR_Pos        //Скорость передачи: F_PCLK/32
+    | 1<<SPI_CR1_MSTR_Pos         //Режим Master (ведущий)
+    | 0<<SPI_CR1_CPOL_Pos | 0<<SPI_CR1_CPHA_Pos; //Режим работы SPI: 0
+  
+  
+  SPI1->CR2 |= 1<<SPI_CR2_TXDMAEN_Pos;
+  SPI1->CR2 |= 1<<SPI_CR2_RXDMAEN_Pos;
+  SPI1->CR1 |= 1<<SPI_CR1_SPE_Pos; //Включаем SPI
+}
 
-   void DMA1_Channel2_IRQHandler(void) {
-       if (DMA1->ISR & DMA_ISR_TCIF2) {
-           // Обработка завершения приема
-           DMA1->IFCR |= DMA_IFCR_CTCIF2; // Сбрасываем флаг
-       }
-   }
+void SPI_Receive(uint8_t *data, uint16_t len)
+{
+  static uint8_t _filler = 0xFF;
+  
+  //отключаем канал DMA после предыдущей передачи данных
+  DMA1_Channel2->CCR &= ~(1 << DMA_CCR1_EN_Pos); 
+  
+  DMA1_Channel2->CPAR = (uint32_t)(&SPI1->DR); //заносим адрес регистра DR в CPAR
+  DMA1_Channel2->CMAR = (uint32_t)data; //заносим адрес данных в регистр CMAR
+  DMA1_Channel2->CNDTR = len; //количество передаваемых данных
+  
+  //Настройка канала DMA
+  DMA1_Channel2->CCR = 0 << DMA_CCR_MEM2MEM_Pos //режим MEM2MEM отключен
+    | 0x00 << DMA_CCR_PL_Pos //приоритет низкий
+    | 0x00 << DMA_CCR_MSIZE_Pos //разрядность данных в памяти 8 бит
+    | 0x01 << DMA_CCR_PSIZE_Pos //разрядность регистра данных 16 бит 
+    | 1 << DMA_CCR_MINC_Pos //Включить инкремент адреса памяти
+    | 0 << DMA_CCR_PINC_Pos //Инкремент адреса периферии отключен
+    | 0 << DMA_CCR_CIRC_Pos //кольцевой режим отключен
+    | 0 << DMA_CCR_DIR_Pos;  //0 - из периферии в память
+  
+  DMA1_Channel2->CCR |= 1 << DMA_CCR_EN_Pos; //включаем прием данных
+  
+  
+  //////////////////////////////////////////////////////////////////////////////
+  
+  //отключаем канал DMA после предыдущей передачи данных
+  DMA1_Channel3->CCR &= ~(1 << DMA_CCR_EN_Pos); 
+  
+  DMA1_Channel3->CPAR = (uint32_t)(&SPI1->DR); //заносим адрес регистра DR в CPAR
+  DMA1_Channel3->CMAR = (uint32_t)(&_filler); //заносим адрес данных в регистр CMAR
+  DMA1_Channel3->CNDTR = len; //количество передаваемых данных
+  
+  //Настройка канала DMA
+  DMA1_Channel3->CCR = 0 << DMA_CCR_MEM2MEM_Pos //режим MEM2MEM отключен
+    | 0x00 << DMA_CCR_PL_Pos //приоритет низкий
+    | 0x00 << DMA_CCR_MSIZE_Pos //разрядность данных в памяти 8 бит
+    | 0x01 << DMA_CCR_PSIZE_Pos //разрядность регистра данных 16 бит 
+    | 0 << DMA_CCR_MINC_Pos //Инкремент адреса памяти отключен
+    | 0 << DMA_CCR_PINC_Pos //Инкремент адреса периферии отключен
+    | 0 << DMA_CCR_CIRC_Pos //кольцевой режим отключен
+    | 1 << DMA_CCR_DIR_Pos;  //1 - из памяти в периферию
+  
+  DMA1_Channel3->CCR |= 1 << DMA_CCR_EN_Pos; //Запускаем процесс
+}
 
-int main(void)
- {
- char* data_tx="Tst",data_rx;
- 
- 
-   RCC->APB2ENR |= RCC_APB2ENR_SPI1EN; // Включаем SPI1
-   RCC->APB2ENR |= RCC_APB2ENR_IOPAEN; // Включаем GPIOA
-   RCC->AHBENR |= RCC_AHBENR_DMA1EN;   // Включаем DMA1
-
-GPIOA->CRL &= ~(GPIO_CRL_CNF5 | GPIO_CRL_CNF6 | GPIO_CRL_CNF7);
-   GPIOA->CRL |= (GPIO_CRL_MODE5_1 | GPIO_CRL_MODE6_1 | GPIO_CRL_MODE7_1); // PA5, PA6, PA7
-	 
-	 SPI1->CR1 = SPI_CR1_MSTR | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_BR_0; // Мастер, NSS, частота
-   SPI1->CR2 = SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN; // Включаем DMA
-   SPI1->CR1 |= SPI_CR1_SPE; // Включаем SPI1
-	 
-	 DMA1_Channel3->CNDTR = 50;             // Кол-во данных для передачи
-   DMA1_Channel3->CMAR = (uint32_t)data_tx;   // Адрес данных для передачи
-   DMA1_Channel3->CPAR = (uint32_t)&SPI1->DR; // Адрес регистра данных SPI
-
-   DMA1_Channel2->CNDTR = 50;             // Кол-во данных для приема
-   DMA1_Channel2->CMAR = (uint32_t)data_rx;   // Адрес данных для приема
-   DMA1_Channel2->CPAR = (uint32_t)&SPI1->DR; // Адрес регистра данных SPI
-	 
-	 DMA1_Channel3->CCR |= DMA_CCR3_EN; // Включаем передачу
-   DMA1_Channel2->CCR |= DMA_CCR2_EN; // Включаем прием
-	 
-	 DMA1_Channel3->CCR |= DMA_CCR3_TCIE; // Разрешаем прерывание по завершению передачи
-   NVIC_EnableIRQ(DMA1_Channel3_IRQn);
-   NVIC_EnableIRQ(DMA1_Channel2_IRQn);
-	 
-	 
-	 DMA1_Channel3->CNDTR = 50;             // Кол-во данных для передачи
-   DMA1_Channel3->CMAR = (uint32_t)data_tx;   // Адрес данных для передачи
-   DMA1_Channel3->CPAR = (uint32_t)&SPI1->DR;
-	 
-    while (1)
-		{
-
-    }
-
-    return 0;
+void main()
+{
+  SPIInit();
+  SPI_Receive(data, sizeof(data));
+  
+  
+  for(;;)
+  {
+  }
 }
