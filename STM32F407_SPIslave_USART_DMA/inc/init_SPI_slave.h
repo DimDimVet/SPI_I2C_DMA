@@ -16,7 +16,7 @@ void Config_SPI_DMA2(void);//dma spi
 
 int DMA2_SPI_ReadSize(void);
 int DMA2_SPI_GetStatus(void);
-char* DMA2_SPI_ReadData(void);
+char DMA2_SPI_ReadData(void);
 void DMA2_SPI_SetString(char* str);
 void SPI_Transmit(uint8_t data);//spi Tx
 uint8_t SPI_Receive();//spi Rx

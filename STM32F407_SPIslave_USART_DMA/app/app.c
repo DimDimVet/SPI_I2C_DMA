@@ -3,7 +3,7 @@
 int size_SPI_Rx;
 uint8_t sendData = 0xA5; 
 char receivedData = 0;
-char* receivedStr;
+char receivedStr;
 
 int main()
 {
@@ -12,9 +12,7 @@ int main()
 	
 	while(1)
 	{
-//		Receive_Data();
-//		ExecutorTerminal();
-		//delay_s(1);
+
 	}
 	return 0;
 }
@@ -52,8 +50,12 @@ void DMA2_Stream0_IRQHandler(void)
 								size_SPI_Rx=DMA2_SPI_ReadSize();
 								//receivedStr=malloc(size_SPI_Rx * sizeof(char));
 								receivedStr=DMA2_SPI_ReadData();
-								//snprintf(rezultStr, sizeof rezultStr, "%s", receivedStr);
-								//DMA2_SetString(rezultStr);
+								if (DMA2_GetStatus())
+								{
+									receivedStr=0x08;
+									snprintf(rezultStr, sizeof rezultStr, "pusto%c", receivedStr);
+									DMA2_SetString(rezultStr);
+								}
 //						}
 }
 //
@@ -85,7 +87,7 @@ void ExecutorTerminal()
 
 				if(receivedChar==CHAR_COMMAND1)
 				{
-						snprintf(rezultStr, sizeof rezultStr, "%s command: %s", greetingsStr,receivedStr);
+						snprintf(rezultStr, sizeof rezultStr, "%s command: %c", greetingsStr,receivedChar);
 						DMA2_SetString(rezultStr);
 				}
 				else if(receivedChar==CHAR_COMMAND0)
@@ -93,16 +95,6 @@ void ExecutorTerminal()
 						snprintf(rezultStr, sizeof rezultStr, "%s command: %c", partingStr,receivedChar);
 						DMA2_SetString(rezultStr);
 				}
-//				else if(receivedChar==CHAR_COMMAND5)
-//				{
-//						if(DMA2_SPI_GetStatus())
-//						{	
-//								receivedStr=DMA2_SPI_ReadData();
-//								snprintf(rezultStr, sizeof rezultStr, "%c %s", sendData,receivedStr);
-//								DMA2_SetString(rezultStr);
-//						}
-//						
-//				}
 				else
 				{
 						snprintf(rezultStr, sizeof rezultStr, "%s: %c", errorStr,receivedChar);

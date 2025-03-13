@@ -1,8 +1,8 @@
 #include "init_SPI_slave.h"
 
-int sizeSPITx, sizeSPIRx=50;
+int sizeSPITx, sizeSPIRx=1;
 char* dataBufSPITx="tests";;
-char* dataBufSPIRx="";
+char dataBufSPIRx;
 
 
 void Init_SPI(void)//main init spi	
@@ -62,7 +62,8 @@ void  Config_SPI()//slave mode
 		SPI1->CR1 |= SPI_CR1_BR_1;// f/4
 		SPI1->CR1 |= SPI_CR1_CPOL;// начальный фронт
 		SPI1->CR1 |= SPI_CR1_CPHA;// фаза...
-		
+		SPI1->CR2 = SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN; // Включаем DMA
+	
     SPI1->CR1 |= SPI_CR1_SPE;//Вкл SPI
 }
 
@@ -81,18 +82,20 @@ void Config_SPI_DMA2()
 		DMA2_Stream3->CR |= DMA_SxCR_EN;// Включение канала DMA
 		
     DMA2_Stream0->CR |=(DMA_SxCR_CHSEL_0|DMA_SxCR_CHSEL_1);  // Канал 3 USART1_RX
-    //DMA2_Stream0->CR |= DMA_SxCR_MSIZE;//размер ячейки 8бит
+    DMA2_Stream0->CR |= DMA_SxCR_MSIZE_0;//размер ячейки 8бит
     DMA2_Stream0->CR |= DMA_SxCR_PSIZE;//размер данных 8бит
+		DMA2_Stream0->CR |= DMA_SxCR_MINC;//Автоматическое увеличение адреса передатчика
     DMA2_Stream0->CR |= DMA_SxCR_PINC;//режим увеличения объема памяти
-    //DMA2_Stream0->CR |= DMA_SxCR_DIR;  // Из переферии в память
+    DMA2_Stream0->CR |= DMA_SxCR_DIR;  // Из переферии в память
     DMA2_Stream0->CR |= DMA_SxCR_CIRC;//цикл приема
     DMA2_Stream0->CR |= DMA_SxCR_TCIE;//прерывания
+	
     DMA2_Stream0->NDTR = sizeSPIRx;//размер массива
     DMA2_Stream0->PAR = (uint32_t)&SPI1->DR;// Адрес регистра данных spi
     DMA2_Stream0->M0AR = (uint32_t)dataBufSPIRx;// Адрес буфера
     DMA2_Stream0->CR |= DMA_SxCR_EN;// Включение канала DMA
 		
-		SPI1->CR2 = SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN; // Включаем DMA
+		
 		DMA2->LIFCR |= DMA_LIFCR_CTCIF3;
 		DMA2->LIFCR |= DMA_LIFCR_CTCIF0;
 		NVIC_EnableIRQ(DMA2_Stream3_IRQn);// Включение прерываний DMA
@@ -111,12 +114,17 @@ int DMA2_SPI_GetStatus()//Проверим окончание чтения
 
 int DMA2_SPI_ReadSize()//считываем массив 
 {
-	sizeSPIRx = strlen(dataBufSPIRx);
+	//sizeSPIRx = strlen(dataBufSPIRx);
 	return sizeSPIRx;
 }
 
-char* DMA2_SPI_ReadData()//считываем массив 
+char DMA2_SPI_ReadData()//считываем массив 
 {
+		DMA2_Stream0->CR &= ~DMA_SxCR_EN;
+		DMA2_Stream0->NDTR = sizeSPIRx;//размер массива
+    DMA2_Stream0->PAR = (uint32_t)&SPI1->DR;// Адрес регистра данных spi
+    DMA2_Stream0->M0AR = (uint32_t)dataBufSPIRx;// Адрес буфера
+    DMA2_Stream0->CR |= DMA_SxCR_EN;// Включение канала DMA
 	return dataBufSPIRx;
 }
 

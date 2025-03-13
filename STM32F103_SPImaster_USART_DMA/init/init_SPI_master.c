@@ -144,7 +144,7 @@ void DMA1_SPI_SetString(char* str, int sizeSPITx)//Установка строк
 		//sizeSPITx = strlen(str);
 		
 		DMA1_Channel3->CPAR = (uint32_t)(&SPI1->DR); //заносим адрес регистра DR в CPAR
-		DMA1_Channel3->CMAR = (uint32_t)str; //заносим адрес данных в регистр CMAR
+		DMA1_Channel3->CMAR = (uint32_t)str[0]; //заносим адрес данных в регистр CMAR
 		DMA1_Channel3->CNDTR = sizeSPITx; //количество передаваемых данных
 
 		DMA1_Channel3->CCR |= DMA_CCR3_EN;// Включение канала DMA

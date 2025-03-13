@@ -8,14 +8,13 @@ int main()
 	int count=0;
 	Init_USART(BAUND_RATE);
 	Init_SPI();
-	//snprintf(rezultStr, sizeof rezultStr, "%s %c", tstSPIStr,sendData);
-	//SPI_Transmit(sendData);
-	//DMA1_SPI_SetString(rezultStr);
+
 	DMA1_SPI_SetString(tstSPIStr,10);
 	DMA1_SPI_GetString(tstSPIStr2,10);
 	while(1)
 	{
-	
+			DMA1_SPI_SetString(tstSPIStr,10);
+		delay_s(1);
 		//Receive_Data();
 		//delay_ms(10);
 	}
