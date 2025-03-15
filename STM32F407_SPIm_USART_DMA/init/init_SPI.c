@@ -11,7 +11,7 @@ void Init_SPI()//main init spi
 	Enable_RCC_SPI1();
 	Config_GPIO_SPI1();
 	Config_SPI();
-	//Config_SPI_DMA1();
+	Config_SPI_DMA1();
 }
 
 void Enable_RCC_SPI1()
@@ -50,12 +50,12 @@ void Config_SPI()//slave mode
     SPI2->CR1 = 0;//reset
 
 		SPI2->CR1 |= SPI_CR1_MSTR;// master
-		SPI2->CR1 |= SPI_CR1_BIDIMODE;//включение режима двунаправленных данных mode:master
-		SPI2->CR1 |= SPI_CR1_BIDIOE;//включение вывода в двунаправленном режиме
-		SPI2->CR1 |= SPI_CR1_CRCEN;//аппаратный расчет CRC включен
-		SPI2->CR1 |= SPI_CR1_CRCNEXT;//следующая передача CRC
-		//SPI2->CR1 |= SPI_CR1_DFF;//16-битный формат кадра данных
-		SPI2->CR1 |= SPI_CR1_RXONLY;//Только прием mode:slave
+		//SPI2->CR1 |= SPI_CR1_BIDIMODE;//включение режима двунаправленных данных mode:master 0
+		//SPI2->CR1 |= SPI_CR1_BIDIOE;//включение вывода в двунаправленном режиме 0
+		//SPI2->CR1 |= SPI_CR1_CRCEN;//аппаратный расчет CRC включен 0
+		//SPI2->CR1 |= SPI_CR1_CRCNEXT;//следующая передача CRC 0
+		SPI2->CR1 |= SPI_CR1_DFF;//16-битный формат кадра данных
+		//SPI2->CR1 |= SPI_CR1_RXONLY;//Только прием mode:slave
 		SPI2->CR1 |= SPI_CR1_SSM;// Программное управление mode:master
 		SPI2->CR1 |= SPI_CR1_SSI;// Внутренний раб выбор mode:master
 		SPI2->CR1 |= SPI_CR1_LSBFIRST;//Формат кадра LSB
@@ -63,7 +63,7 @@ void Config_SPI()//slave mode
 		SPI2->CR1 |= SPI_CR1_CPOL;// начальный фронт
 		SPI2->CR1 |= SPI_CR1_CPHA;// фаза...
 		
-		//SPI2->CR2 = SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN; // Включаем DMA
+		SPI2->CR2 = SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN; // Включаем DMA
 	
     SPI2->CR1 |= SPI_CR1_SPE;//Вкл SPI
 }
@@ -117,13 +117,61 @@ void Config_SPI_DMA1()
 
 
 ///////////////////////
-void SPI_Transmit(uint32_t data)
+uint32_t SPI_TransmitReceive(uint32_t data)
 {
-    while (!(SPI2->SR & SPI_SR_TXE))//готовность Tx
-		{
-		};
-    SPI2->DR = data;
+	 // Ждем, пока не будет готово устройство для передачи
+    while (!(SPI2->SR & SPI_SR_TXE)); // Ждём, пока TXE станет 1
+    SPI2->DR = data;                  // Отправляем данные
+
+    // Ждем, пока данные не будут приняты
+    while (!(SPI2->SR & SPI_SR_RXNE)); // Ждём, пока RXNE станет 1
+    return SPI2->DR;
 }
+
+void SPI2_Receive(uint8_t *data, uint16_t size) {
+    DMA1_Stream3->M0AR = (uint32_t)data; // Указание адреса буфера приема
+    DMA1_Stream3->NDTR = size;           // Установка количества данных
+    DMA1_Stream3->CR |= DMA_SxCR_EN;     // Включаем DMA
+
+    // Активируем прием
+    SPI2->CR2 |= SPI_CR2_RXDMAEN; // Включаем DMA для приема
+
+    // Ждем завершения приема
+    while (!(SPI2->SR & SPI_SR_RXNE)); // Ждем, пока RXNE станет 1
+
+    // Очищаем флаг DMA после завершения
+    DMA1_Stream3->CR &= ~DMA_SxCR_EN; // Отключаем DMA после завершения приема
+}
+
+void SPI2_Transmit(uint8_t *data, uint16_t size) {
+    DMA1_Stream3->M0AR = (uint32_t)data; // Указание адреса буфера передачи
+    DMA1_Stream3->NDTR = size;           // Установка количества данных
+    DMA1_Stream3->CR |= DMA_SxCR_EN;     // Включаем DMA
+
+    // Активируем передачу
+    SPI2->CR2 |= SPI_CR2_TXDMAEN; // Включаем DMA для передачи
+
+    // Ждем завершения передачи
+    while (!(SPI2->SR & SPI_SR_TXE)); // Ждем, пока TXE станет 1
+    while (!(SPI2->SR & SPI_SR_RXNE)); // Ждем, пока RXNE станет 1
+
+    // Очищаем флаг DMA после завершения
+    DMA1_Stream3->CR &= ~DMA_SxCR_EN; // Отключаем DMA после завершения передачи
+}
+
+//void DMA1_Config(void) {
+//    // Включение тактирования DMA1
+//    RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;
+
+//    // Настройка потока 3 DMA
+//    DMA1->Stream3->CR = 0; // Сбрасываем настройки
+//    DMA1->Stream3->PAR = (uint32_t)&SPI2->DR; // Адрес регистра данных SPI2
+//    DMA1->Stream3->M0AR = 0; // Будем устанавливать буфер в функции передачи
+//    DMA1->Stream3->NDTR = 0; // Количество данных будет установлено в функции передачи
+//    DMA1->Stream3->CR |= (DMA_SxCR_DIR_0 | DMA_SxCR_MINC | DMA_SxCR_PSIZE_0 | DMA_SxCR_MSIZE_0 | DMA_SxCR_PL_1); // Настройка направления, инкремент, размер
+//}
+
+
 
 uint32_t SPI_Receive()
 {
