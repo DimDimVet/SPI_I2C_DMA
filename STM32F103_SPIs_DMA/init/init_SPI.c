@@ -16,45 +16,60 @@ void Enable_RCC_SPI()
 void Config_GPIO_SPI()
 {
 		GPIOA->CRL &= ~(GPIO_CRL_MODE5 | GPIO_CRL_CNF5);//reset
-    GPIOA->CRL |= GPIO_CRL_MODE5_1; // PA5 2MHz
-		GPIOA->CRL |= GPIO_CRL_CNF5_1; // PA5 alt SCK
+    GPIOA->CRL |= GPIO_CRL_MODE5; // PA5 2MHz
+		GPIOA->CRL |= GPIO_CRL_CNF5_0; // PA5 alt SCK
 		
 		GPIOA->CRL &= ~(GPIO_CRL_MODE7 | GPIO_CRL_CNF7);//reset
-		GPIOA->CRL |= GPIO_CRL_MODE7_1; // PA7 2MHz
-		GPIOA->CRL |= GPIO_CRL_CNF7_1; // PA7 alt MOSI
+		//GPIOA->CRL |= GPIO_CRL_MODE7_1; // PA7 2MHz
+		GPIOA->CRL |= GPIO_CRL_CNF7; // PA7 alt MOSI
                   
     GPIOA->CRL &= ~(GPIO_CRL_MODE6 | GPIO_CRL_CNF6);
-    GPIOA->CRL |= (GPIO_CRL_CNF6_0); // PA6 input MISO
+		GPIOA->CRL |= GPIO_CRL_MODE6; // PA5 2MHz
+    GPIOA->CRL |= (GPIO_CRL_CNF6_1); // PA6 input MISO
 }
 
 void Config_SPI()
 {
     SPI1->CR1 = 0;//reset
 	
-		//SPI1->CR1 |= SPI_CR1_MSTR;// master
-		//SPI1->CR1 |= SPI_CR1_BIDIMODE;//включение режима двунаправленных данных mode:master
-		SPI1->CR1 |= SPI_CR1_BIDIOE;//включение вывода в двунаправленном режиме
-		SPI1->CR1 |= SPI_CR1_CRCEN;//аппаратный расчет CRC включен
-		SPI1->CR1 |= SPI_CR1_CRCNEXT;//следующая передача CRC
+		SPI1->CR1 &= ~SPI_CR1_MSTR;// master
+		SPI1->CR1 &= ~SPI_CR1_BIDIMODE;//включение режима двунаправленных данных mode:master
+		SPI1->CR1 &= ~SPI_CR1_BIDIOE;//включение вывода в двунаправленном режиме
+		SPI1->CR1 &= ~SPI_CR1_CRCEN;//аппаратный расчет CRC включен
+		SPI1->CR1 &= ~SPI_CR1_CRCNEXT;//следующая передача CRC
 		SPI1->CR1 |= SPI_CR1_DFF;//16-битный формат кадра данных
-		SPI1->CR1 |= SPI_CR1_RXONLY;//Только прием mode:slave
-		//SPI1->CR1 |= SPI_CR1_SSM;// Программное управление mode:master
-		//SPI1->CR1 |= SPI_CR1_SSI;// Внутренний раб выбор mode:master
-		SPI1->CR1 |= SPI_CR1_LSBFIRST;//Формат кадра LSB
-		SPI1->CR1 |= SPI_CR1_BR_1;// f/4
+		SPI1->CR1 &= ~SPI_CR1_RXONLY;//Только прием mode:slave
+		SPI1->CR1 &= ~SPI_CR1_SSM;// Программное управление mode:master
+		SPI1->CR1 &= ~SPI_CR1_SSI;// Внутренний раб выбор mode:master
+		SPI1->CR1 &= ~SPI_CR1_LSBFIRST;//Формат кадра LSB
+		SPI1->CR1 &= ~SPI_CR1_BR_0;// f/4
+		SPI1->CR1 &= ~SPI_CR1_BR_1;// f/4
+		SPI1->CR1 |= SPI_CR1_BR_2;// f/4
 		SPI1->CR1 |= SPI_CR1_CPOL;// начальный фронт
 		SPI1->CR1 |= SPI_CR1_CPHA;// фаза...
+
 		//SPI1->CR2 |=SPI_CR2_TXDMAEN;//переключили дма на spi - передача, DMAT = Tx
 		//SPI1->CR2 |=SPI_CR2_RXDMAEN;//переключили дма на spi - чтение, DMAR = Rx
+		
 		
     SPI1->CR1 |= SPI_CR1_SPE;//Вкл SPI
 }
 
-uint32_t SPI_Receive()
+uint32_t SPI_TransmitReceive(uint32_t data)
 {
+	 // Ждем, пока не будет готово устройство для передачи
+    while (!(SPI1->SR & SPI_SR_TXE)); // Ждём, пока TXE станет 1
+   SPI1->DR = data;                  // Отправляем данные
+
+    // Ждем, пока данные не будут приняты
+    //while (!(SPI1->SR & SPI_SR_RXNE)); // Ждём, пока RXNE станет 1
 		if(SPI1->SR & SPI_SR_RXNE)
 		{
-				return SPI1->DR;
+			return SPI1->DR;
 		}
-    return 0;
+		else
+		{
+			return 0;
+		}
+    
 }

@@ -9,13 +9,13 @@ int main()
 	Init_USART(BAUND_RATE);
 	Init_SPI();
 
-	DMA1_SPI_SetString(tstSPIStr,10);
-	DMA1_SPI_GetString(tstSPIStr2,10);
+	//DMA1_SPI_SetString(tstSPIStr,10);
+	//DMA1_SPI_GetString(tstSPIStr2,10);
 	while(1)
 	{
-			DMA1_SPI_SetString(tstSPIStr,10);
+			//DMA1_SPI_SetString(tstSPIStr,10);
 		delay_s(1);
-		//Receive_Data();
+		Receive_Data();
 		//delay_ms(10);
 	}
 	return 0;
@@ -28,11 +28,11 @@ void Receive_Data()
 		
 		if(receivedData!=0)
 		{
-			//sendData = 0xFE;
-			//SPI_Transmit(receivedData);
+			sendData = 0xFE;
+			SPI_Transmit(receivedData);
 		}
 
-		//receivedData=SPI_Receive();
+		receivedData=SPI_Receive();
 }
 
 

@@ -84,10 +84,10 @@ void ExecutorTerminal()
 		if (DMA2_GetStatus())// Проверка на получение
 		{ 
         receivedChar = DMA2_ReadChar(); // Читаем
-
+				Receive_Data();
 				if(receivedChar==CHAR_COMMAND1)
 				{
-						snprintf(rezultStr, sizeof rezultStr, "%s command: %c", greetingsStr,receivedChar);
+						snprintf(rezultStr, sizeof rezultStr, "%s command: %c", greetingsStr,sendData);
 						DMA2_SetString(rezultStr);
 				}
 				else if(receivedChar==CHAR_COMMAND0)

@@ -43,7 +43,7 @@ void  Config_SPI()
     SPI1->CR1 = 0;//reset
 	
 		SPI1->CR1 |= SPI_CR1_MSTR;// master
-		SPI1->CR1 |= SPI_CR1_BIDIMODE;//включение режима двунаправленных данных mode:master
+		//SPI1->CR1 |= SPI_CR1_BIDIMODE;//включение режима двунаправленных данных mode:master
 		SPI1->CR1 |= SPI_CR1_BIDIOE;//включение вывода в двунаправленном режиме
 		SPI1->CR1 |= SPI_CR1_CRCEN;//аппаратный расчет CRC включен
 		SPI1->CR1 |= SPI_CR1_CRCNEXT;//следующая передача CRC
