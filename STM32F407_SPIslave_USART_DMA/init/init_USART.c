@@ -1,7 +1,7 @@
 #include "init_USART.h"
 
 int sizeTx, sizeRx=1;
-char* dataBufTx="tests";;
+char* dataBufTx="tests";
 char dataBufRx[1];
 
 void Init_USART(int baudRate)//main init usart
