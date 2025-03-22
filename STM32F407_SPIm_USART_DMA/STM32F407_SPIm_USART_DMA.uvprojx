@@ -413,6 +413,11 @@
               <FileType>5</FileType>
               <FilePath>.\inc\init_SPI.h</FilePath>
             </File>
+            <File>
+              <FileName>init_USART.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\inc\init_USART.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -432,6 +437,11 @@
               <FileName>init_SPI.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\init\init_SPI.c</FilePath>
+            </File>
+            <File>
+              <FileName>init_USART.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\init\init_USART.c</FilePath>
             </File>
           </Files>
         </Group>
