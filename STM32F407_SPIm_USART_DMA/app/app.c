@@ -6,6 +6,7 @@ uint8_t sizeSPI=SIZESTRS1;
 uint32_t dataBufSPI=0xAA;
 uint32_t dataBufSPIRx;
 static uint8_t _filler = 0xFF;
+uint32_t tst;
 
 uint8_t txBuffer[] = {0xAB}; // Данные для передачи
 uint8_t rxBuffer[1]; // Буфер для приема данных
@@ -24,6 +25,7 @@ void DMA1_Stream3_IRQHandler(void)
     LED6();
     if (DMA1->LISR & DMA_LISR_TCIF3)
     {
+				DMA1_Stream3->M0AR = (uint32_t)tst;
         DMA1->LIFCR |= DMA_LIFCR_CTCIF3; // Сбрасываем флаг
     }
 }
@@ -39,26 +41,22 @@ void DMA2_Stream7_IRQHandler(void)
 
 void DMA2_Stream2_IRQHandler(void)
 {
-//    if ((DMA2->LISR & DMA_LISR_TCIF2) == DMA_LISR_TCIF2)
-//		{
-//        DMA2->LIFCR |= DMA_LIFCR_CTCIF2;
-//				LED();
-//    }
-    ExecutorTerminal();
+    if ((DMA2->LISR & DMA_LISR_TCIF2) == DMA_LISR_TCIF2)
+		{
+				ExecutorTerminal();
+        DMA2->LIFCR |= DMA_LIFCR_CTCIF2;
+				LED6();
+    }
+    
 }
 
 void ExecutorTerminal()
 {
-		if (DMA2_GetStatus())// Проверка на получение
-		{ 
         receivedChar = DMA2_ReadChar(); // Читаем
-				snprintf(rezultStr, sizeof rezultStr, "%s command: %c", greetingsStr,receivedChar);
+				tst= SPI2_DMA_TransmitReceive(receivedChar,1);
+				snprintf(rezultStr, sizeof rezultStr, "%s: %c", set_infoStr,tst);
 				DMA2_SetString(rezultStr);
-				LED6();
-    }
 }
-
-
 
 /////////////////
 
@@ -69,7 +67,7 @@ int main()
 		Init_USART1(BAUND_RATE);
 	
     int i;
-    uint32_t tst;
+    
 
     while(1)
     {

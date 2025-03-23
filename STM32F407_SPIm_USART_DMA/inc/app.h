@@ -13,7 +13,7 @@
 char rezultStr [SIZESTR];
 char receivedChar;
 
-char* greetingsStr="Prived STM32F407";
+char* set_infoStr="Otvet ot STM32F103 SPI: ";
 char* partingStr="BayBay STM32F407";
 
 void ExecutorTerminal(void);

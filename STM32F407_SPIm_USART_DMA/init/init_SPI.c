@@ -85,16 +85,16 @@ void Config_SPI1_DMA1()
 		DMA1_Stream3->CR |= 0 << DMA_SxCR_PBURST_Pos;//Конфигурация периферийной пакетной передачи
 	  DMA1_Stream3->CR |= 0 << DMA_SxCR_PL_Pos;//уровень приоритета
 		DMA1_Stream3->CR |= 0 << DMA_SxCR_PINCOS_Pos;//размер смещения периферийного приращения связан с PSIZE
-	  DMA1_Stream3->CR |= 0 << DMA_SxCR_MSIZE_Pos;//Размер данных памяти
-		DMA1_Stream3->CR |= 0 << DMA_SxCR_PSIZE_Pos;//Размер периферийных данных
+	  DMA1_Stream3->CR |= 1 << DMA_SxCR_MSIZE_Pos;//Размер данных памяти
+		DMA1_Stream3->CR |= 1 << DMA_SxCR_PSIZE_Pos;//Размер периферийных данных
  	  DMA1_Stream3->CR |= 1 << DMA_SxCR_MINC_Pos;//Режим приращения памяти
 	  DMA1_Stream3->CR |= 1 << DMA_SxCR_PINC_Pos;//Режим приращения периферийных устройств
-		DMA1_Stream3->CR |= 1 << DMA_SxCR_CIRC_Pos;//кольцевой режим
+		DMA1_Stream3->CR |= 0 << DMA_SxCR_CIRC_Pos;//кольцевой режим
 	  DMA1_Stream3->CR |= 0 << DMA_SxCR_DIR_Pos;//направление передачи данных 00: периферийное устройство-память 01: память-периферийное устройство
 		DMA1_Stream3->CR |= 1 << DMA_SxCR_TCIE_Pos;//Разрешение прерывания завершения передачи
 		DMA1_Stream3->PAR = (uint32_t)(&SPI2->DR);// Адрес регистра данных spi
-		DMA1_Stream3->NDTR = 0;//размер массива
-		DMA1_Stream3->M0AR = 0;// Адрес буфера
+		DMA1_Stream3->NDTR = 5;//размер массива
+		DMA1_Stream3->M0AR = 5;// Адрес буфера
 		DMA1_Stream3->CR |= 1 << DMA_SxCR_EN_Pos;//включение потока 
 		
 		
@@ -129,14 +129,15 @@ uint32_t SPI2_DMA_TransmitReceive(uint32_t data,uint16_t size)
     DMA1_Stream4->M0AR = (uint32_t)data; // Указание адреса буфера передачи
     DMA1_Stream4->NDTR = size;     
     DMA1_Stream4->CR |= DMA_SxCR_EN;     // Включаем DMA                  
-
+		
+		//while (!(DMA1->LISR & DMA_LISR_TCIF3))
 		if(SPI2->SR & SPI_SR_RXNE)
 		{
 			DMA1_Stream3->CR &= ~DMA_SxCR_EN; // Отключаем DMA после завершения приема
 			DMA1_Stream3->M0AR = (uint32_t)data1; // Указание адреса буфера приема
-			DMA1_Stream3->NDTR = size;  
-			DMA1_Stream3->PAR = (uint32_t)&SPI2->DR;		// Установка количества данных
-			return data;
+			DMA1_Stream3->NDTR = size; 
+			DMA1_Stream3->CR |= DMA_SxCR_EN;
+			return data1;
 		}
 		else
 		{
