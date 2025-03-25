@@ -1,34 +1,27 @@
 #include "init_SPI.h"
 
+uint8_t sizeBufRxSPI=30;
+char dataBufRxSPI[30];
+
 void Init_SPI()//main init spi
 {
-		Enable_RCC_SPI();
-		Config_GPIO_SPI();
-		Config_SPI();
+		Enable_RCC_SPI1();
+		Config_GPIO_SPI1();
+		Config_SPI1();
+		Config_SPI1_DMA1();
 }
 
-void Enable_RCC_SPI()
+void Enable_RCC_SPI1()
 {
 		RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;//тактирование GPIOA
 		RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;//тактирование SPI1
+		RCC->AHBENR |= RCC_AHBENR_DMA1EN;   // Включаем DMA1
 }
 
-void Config_GPIO_SPI()
+void Config_GPIO_SPI1()
 {
 
-    // Настраиваем PA4 (nSS) как вход
-    GPIOA->CRL &= ~GPIO_CRL_CNF4; // сбрасываем настройки
-    GPIOA->CRL |= GPIO_CRL_MODE4_0; // режим входа с подтяжкой
-
-//    // Настраиваем PA5 (SCK), PA6 (MISO), PA7 (MOSI) как альтернативные функции
-//    GPIOA->CRL &= ~((GPIO_CRL_CNF5 | GPIO_CRL_MODE5) |
-//                    (GPIO_CRL_CNF6 | GPIO_CRL_MODE6) |
-//                    (GPIO_CRL_CNF7 | GPIO_CRL_MODE7));
-//    GPIOA->CRL |= (GPIO_CRL_CNF5_1 | GPIO_CRL_MODE5_0 |  
-//                   GPIO_CRL_CNF6_0 | GPIO_CRL_MODE6_0 |  
-//                   GPIO_CRL_CNF7_1 | GPIO_CRL_MODE7_0);
-
-
+ // Настраиваем PA5 (SCK), PA6 (MISO), PA7 (MOSI) как альтернативные функции
 
 		GPIOA->CRL &= ~(GPIO_CRL_MODE5 | GPIO_CRL_CNF5);//reset
     GPIOA->CRL |= GPIO_CRL_MODE5_0; // PA5 2MHz
@@ -41,9 +34,13 @@ void Config_GPIO_SPI()
     GPIOA->CRL &= ~(GPIO_CRL_MODE6 | GPIO_CRL_CNF6);
 		GPIOA->CRL |= GPIO_CRL_MODE6_0; // PA7 2MHz
     GPIOA->CRL |= (GPIO_CRL_CNF6_1); // PA6 input MISO
+		
+		// Настраиваем PA4 (nSS) как вход, особеность slave SPI
+    GPIOA->CRL &= ~GPIO_CRL_CNF4; // сбрасываем настройки
+    GPIOA->CRL |= GPIO_CRL_MODE4_0; // режим входа с подтяжкой
 }
 
-void Config_SPI()
+void Config_SPI1()
 {
     SPI1->CR1 = 0;//reset
 	
@@ -52,61 +49,74 @@ void Config_SPI()
 		SPI1->CR1 &= ~SPI_CR1_BIDIOE;//включение вывода в двунаправленном режиме
 		SPI1->CR1 &= ~SPI_CR1_CRCEN;//аппаратный расчет CRC включен
 		SPI1->CR1 &= ~SPI_CR1_CRCNEXT;//следующая передача CRC
-		SPI1->CR1 |= SPI_CR1_DFF;//16-битный формат кадра данных master1
+		SPI1->CR1 &= ~SPI_CR1_DFF;//16-битный формат кадра данных master1
 		SPI1->CR1 &= ~SPI_CR1_RXONLY;//Только прием mode:slave
 		SPI1->CR1 &= ~SPI_CR1_SSM;// Программное управление mode:master1
 		SPI1->CR1 &= ~SPI_CR1_SSI;// Внутренний раб выбор mode:master1
-		SPI1->CR1 &= ~SPI_CR1_LSBFIRST;//Формат кадра LSB
+		SPI1->CR1 |= SPI_CR1_LSBFIRST;//Формат кадра LSB
 		SPI1->CR1 &= ~SPI_CR1_BR_0;// f/4
-		SPI1->CR1 |= SPI_CR1_BR_1;// f/4
+		SPI1->CR1 &= ~SPI_CR1_BR_1;// f/4
 		SPI1->CR1 &= ~SPI_CR1_BR_2;// f/4
 		SPI1->CR1 |= SPI_CR1_CPOL;// начальный фронт
 		SPI1->CR1 |= SPI_CR1_CPHA;// фаза...
 
-		//SPI1->CR2 |=SPI_CR2_TXDMAEN;//переключили дма на spi - передача, DMAT = Tx
-		//SPI1->CR2 |=SPI_CR2_RXDMAEN;//переключили дма на spi - чтение, DMAR = Rx
+		SPI1->CR2 |=SPI_CR2_TXDMAEN;//переключили дма на spi - передача, DMAT = Tx
+		SPI1->CR2 |=SPI_CR2_RXDMAEN;//переключили дма на spi - чтение, DMAR = Rx
 		
 		SPI1->CR1 |= SPI_CR1_SPE;//Вкл SPI
-		
-		
-		//
-//		    SPI1->CR1 = 0;//reset
-//	
-//		SPI1->CR1 |= SPI_CR1_MSTR;// master1
-//		SPI1->CR1 &= ~SPI_CR1_BIDIMODE;//включение режима двунаправленных данных mode:master
-//		SPI1->CR1 &= ~SPI_CR1_BIDIOE;//включение вывода в двунаправленном режиме
-//		SPI1->CR1 &= ~SPI_CR1_CRCEN;//аппаратный расчет CRC включен
-//		SPI1->CR1 &= ~SPI_CR1_CRCNEXT;//следующая передача CRC
-//		SPI1->CR1 |= SPI_CR1_DFF;//16-битный формат кадра данных master1
-//		SPI1->CR1 &= ~SPI_CR1_RXONLY;//Только прием mode:slave
-//		SPI1->CR1 |= SPI_CR1_SSM;// Программное управление mode:master1
-//		SPI1->CR1 |= SPI_CR1_SSI;// Внутренний раб выбор mode:master1
-//		SPI1->CR1 &= ~SPI_CR1_LSBFIRST;//Формат кадра LSB
-//		SPI1->CR1 |= SPI_CR1_BR_0;// f/4
-//		SPI1->CR1 |= SPI_CR1_BR_1;// f/4
-//		SPI1->CR1 &= ~SPI_CR1_BR_2;// f/4
-//		SPI1->CR1 |= SPI_CR1_CPOL;// начальный фронт
-//		SPI1->CR1 |= SPI_CR1_CPHA;// фаза...
-
-//		//SPI1->CR2 |=SPI_CR2_TXDMAEN;//переключили дма на spi - передача, DMAT = Tx
-//		//SPI1->CR2 |=SPI_CR2_RXDMAEN;//переключили дма на spi - чтение, DMAR = Rx
-//		
-////		MODIFY_REG(SPI1->CR1, SPI_CR1_BIDIMODE| SPI_CR1_BIDIOE|SPI_CR1_CRCEN|SPI_CR1_CRCNEXT|
-////												SPI_CR1_RXONLY|SPI_CR1_LSBFIRST|SPI_CR1_BR_2,
-////												SPI_CR1_SSM|SPI_CR1_SSI|SPI_CR1_BR_1|SPI_CR1_DFF|SPI_CR1_BR_0|
-////												SPI_CR1_MSTR|SPI_CR1_CPOL|SPI_CR1_CPHA);
-//												
-//    SPI1->CR1 |= SPI_CR1_SPE;//Вкл SPI
 }
 
-uint32_t SPI_TransmitReceive(uint32_t data)
+void Config_SPI1_DMA1()
 {
-	uint32_t data1;
-	 // Ждем, пока не будет готово устройство для передачи
-                // Отправляем данные
+//Channel 2 SPI1_RX, Channel 3 SPI1_TX
 
-    // Ждем, пока данные не будут приняты
-    //while (!(SPI1->SR & SPI_SR_RXNE)); // Ждём, пока RXNE станет 1
+		DMA1_Channel3->CCR |=0;
+		DMA1_Channel3->CCR &= ~DMA_CCR3_MEM2MEM;//режим памяти в память
+		DMA1_Channel3->CCR &= ~DMA_CCR3_PL;//уровень приоритета канала
+		DMA1_Channel3->CCR &= ~DMA_CCR3_MSIZE_0;//размер памяти
+		DMA1_Channel3->CCR &= ~DMA_CCR3_MSIZE_1;
+		DMA1_Channel3->CCR &= ~DMA_CCR3_PSIZE_0;//размер периферии
+		DMA1_Channel3->CCR &= ~DMA_CCR3_PSIZE_1;
+		DMA1_Channel3->CCR |= DMA_CCR3_MINC;//Режим приращения памяти
+		DMA1_Channel3->CCR &= ~DMA_CCR3_PINC;//Режим периферийного приращения
+		DMA1_Channel3->CCR &= ~DMA_CCR3_CIRC;//Кольцевой режим
+		DMA1_Channel3->CCR |= DMA_CCR3_DIR;//Направление передачи данных
+		DMA1_Channel3->CCR |= DMA_CCR3_TCIE;//разрешение прерывания по завершению передачи
+		DMA1_Channel3->CPAR = (uint32_t)(&SPI1->DR); //Адрес регистра данных spi
+		DMA1_Channel3->CNDTR = 0; //размер массива
+		DMA1_Channel3->CMAR = 0; //Адрес буфера
+		DMA1_Channel3->CCR |= DMA_CCR3_EN; // Включение канала DMA
+
+		DMA1_Channel2->CCR |=0;
+		DMA1_Channel2->CCR &= ~DMA_CCR2_MEM2MEM;//режим памяти в память
+		DMA1_Channel2->CCR &= ~DMA_CCR2_PL;//уровень приоритета канала
+		DMA1_Channel2->CCR |= DMA_CCR2_MSIZE_0;//размер памяти
+		DMA1_Channel2->CCR |= DMA_CCR2_MSIZE_1;
+		DMA1_Channel2->CCR |= DMA_CCR2_PSIZE_0;//размер периферии
+		DMA1_Channel2->CCR |= DMA_CCR2_PSIZE_1;
+		DMA1_Channel2->CCR |= DMA_CCR2_MINC;//Режим приращения памяти
+		DMA1_Channel2->CCR |= DMA_CCR2_PINC;//Режим периферийного приращения
+		DMA1_Channel2->CCR |= DMA_CCR2_CIRC;//Кольцевой режим
+		DMA1_Channel2->CCR &= ~DMA_CCR2_DIR;//Направление передачи данных
+		DMA1_Channel2->CCR |= DMA_CCR2_TCIE;//разрешение прерывания по завершению передачи
+		DMA1_Channel2->CPAR = (uint32_t)(&SPI1->DR); //Адрес регистра данных spi
+		DMA1_Channel2->CNDTR = sizeBufRxSPI; //размер массива
+		DMA1_Channel2->CMAR = (uint32_t)dataBufRxSPI; //Адрес буфера
+		DMA1_Channel2->CCR |= DMA_CCR2_EN; // Включение канала DMA
+		
+		DMA1->IFCR |= DMA_IFCR_CTCIF3;
+		DMA1->IFCR |= DMA_IFCR_CTCIF2;
+		
+		NVIC_EnableIRQ(DMA1_Channel3_IRQn); // Включение прерываний DMA
+		NVIC_EnableIRQ(DMA1_Channel2_IRQn); // Включение прерываний DMA
+
+}
+
+//////////////
+uint8_t SPI_TransmitReceive(uint8_t data)
+{
+	uint8_t data1;
+
 		if(SPI1->SR & SPI_SR_RXNE)
 		{
 					data1=SPI1->DR;
@@ -116,7 +126,33 @@ uint32_t SPI_TransmitReceive(uint32_t data)
 		}
 		else
 		{
-			return 0;
+			return SPI1->DR;
 		}
-    
 }
+
+char* Read_SPI1_DMA1(char *str_data)
+{
+    //return dataBufRxSPI[0];
+		
+//		char* str_temp;
+//		
+		for(int i=0; i < 30; i++)
+		{
+			str_data[i]=dataBufRxSPI[i];
+		}
+		
+    return dataBufRxSPI;
+}
+
+
+void SPI1_DMA1_TransmitReceive(char *str_data)
+{
+//		uint8_t sizeTx;
+//		sizeTx = strlen(str_data);
+
+    DMA1_Channel3->CCR &= ~DMA_CCR3_EN;
+    DMA1_Channel3->CNDTR = 30;		
+    DMA1_Channel3->CMAR = (uint32_t)str_data; // Указание адреса буфера передачи
+    DMA1_Channel3->CCR |= DMA_CCR3_EN;     // Включаем DMA
+}
+

@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "stm32f4xx.h"                  // Device header
+#include "stm32f4xx.h"  
 
 #define SIZE_BUF_RX_USART 50
 
