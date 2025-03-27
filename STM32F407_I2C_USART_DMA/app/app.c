@@ -19,8 +19,8 @@ int main()
 	
     while(1)
     {
-				I2C_Write(I2C_ADDRESS, txBuffer, sizeof(txBuffer));
-				delay_s(1);
+				//I2C_Write(I2C_ADDRESS, txBuffer, sizeof(txBuffer));
+				//delay_s(1);
 				//SPI2_DMA_TransmitReceive(receivedChar);
         //tst = SPI2_TransmitReceive(0xDF);//test net DMA
     }

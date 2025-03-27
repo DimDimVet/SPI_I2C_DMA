@@ -25,40 +25,32 @@ void Config_GPIO_I2C()
 
     GPIOB->MODER |= 0 << GPIO_MODER_MODE6_Pos; // Очистка режима для PB6
     GPIOB->MODER |= 2 << GPIO_MODER_MODE6_Pos;   // Альтернативная функция для PB6 (SCL)
+		GPIOB->OTYPER |= 1 << GPIO_OTYPER_OT6_Pos;//открытый коллектор
+		GPIOB->OSPEEDR |= 3 << GPIO_OSPEEDR_OSPEED6_Pos;//скорость
+		GPIOB->PUPDR |= 1 << GPIO_PUPDR_PUPD6_Pos;//подтянем+
 
     GPIOB->MODER |= 0 << GPIO_MODER_MODE7_Pos;  // Очистка режима для PB7
     GPIOB->MODER |= 2 << GPIO_MODER_MODE7_Pos;   // Альтернативная функция для PB7 (SDA)
-
-    GPIOB->AFR[0] |= 5 << GPIO_AFRL_AFSEL6_Pos;// AF4 для I2C PB6 (SCL)
-    GPIOB->AFR[0] |= 5 << GPIO_AFRL_AFSEL7_Pos;// AF4 для I2C PB7 (SDA)
+		GPIOB->OTYPER |= 1 << GPIO_OTYPER_OT7_Pos;//открытый коллектор
+		GPIOB->OSPEEDR |= 3 << GPIO_OSPEEDR_OSPEED7_Pos;//скорость
+		GPIOB->PUPDR |= 1 << GPIO_PUPDR_PUPD7_Pos;//подтянем+
+		
+    GPIOB->AFR[1] |= 4 << GPIO_AFRL_AFSEL6_Pos;// AF4 для I2C PB6 (SCL)
+    GPIOB->AFR[1] |= 4 << GPIO_AFRL_AFSEL7_Pos;// AF4 для I2C PB7 (SDA)
 	
 }
 
 void Config_I2C()
 {
-//    I2C1->CR1 |= I2C_CR1_PE; // Включение I2C
-//    I2C1->CR2 |= (16 << 0); // Частота 16 МГц, 16 тактов
-//    I2C1->CCR = 80; // Настройка условного задержки
-//    I2C1->TRISE = 17; // Максимальное время подъема
-	
-		//настраиваем модуль в режим I2C
-	I2C2->CR1 &= ~2C_CR1_SMBUS;
-	
-        //указываем частоту тактирования модуля
-	I2C2->CR2 &= ~I2C_CR2_FREQ;
-	I2C2->CR2 |= 42; // Fclk1=168/4=42MHz 
-	
-        //конфигурируем I2C, standart mode, 100 KHz duty cycle 1/2	
-	I2C2->CCR &= ~(I2C_CCR_FS | I2C_CCR_DUTY);
-        //задаем частоту работы модуля SCL по формуле 10 000nS/(2* TPCLK1) 
-	I2C2->CCR |= 208; //10 000ns/48ns = 208
-	
-	//Standart_Mode = 1000nS, Fast_Mode = 300nS, 1/42MHz = 24nS
-	I2C2->TRISE = 42; //(1000nS/24nS)+1
-
-        //включаем модуль
-	I2C2->CR1 |= I2C_CR1_PE;
-
+		I2C1->CR1 |= 1 << I2C_CR1_SWRST_Pos;//сброс
+		I2C1->CR1 |= 0 << I2C_CR1_SWRST_Pos;//отключили сброс
+		
+		I2C1->CR2 |= 36 << I2C_CR2_FREQ_Pos;//установка частоты
+		I2C1->CCR |= 180 << I2C_CCR_CCR_Pos;// Настройка условного задержки
+		I2C1->TRISE |= 37 << I2C_TRISE_TRISE_Pos;// Максимальное время подъема
+		
+		I2C1->CR1 |= 1 << I2C_CR1_PE_Pos;
+		
 }
 
 void Config_I2C_DMA1()
@@ -107,14 +99,16 @@ void Config_I2C_DMA1()
 }
 
 ///////////////////////
-void I2C_Start(void) {
-    I2C1->CR1 |= I2C_CR1_START; // Генерация стартового состояния
-    while (!(I2C1->SR1 & I2C_SR1_SB)); // Ожидание завершения
+void I2C_Start(void) 
+{
+		I2C1->CR1 |= 1 << I2C_CR1_ACK_Pos;
+    I2C1->CR1 |= 1 << I2C_CR1_START_Pos; // Генерация стартового состояния
+    while (I2C_SR1_SB==0); // Ожидание завершения
 }
 
 void I2C_Stop(void) {
     I2C1->CR1 |= I2C_CR1_STOP; // Генерация стоп-состояния
-    //while (I2C1->CR1 & I2C_CR1_STOP); // Ожидание завершения
+   // while (I2C1->CR1 & I2C_SR1_STOP); // Ожидание завершения
 }
 
 void I2C_SendByte(uint8_t data) {
@@ -129,6 +123,7 @@ uint8_t I2C_ReadByte(void) {
 
 void I2C_Write(uint8_t address, uint8_t *data, uint16_t size) {
     I2C_Start();
+		
     I2C_SendByte(address << 1); // Адрес устройства и бит записи
     for (uint16_t i = 0; i < size; i++) {
         I2C_SendByte(data[i]);
