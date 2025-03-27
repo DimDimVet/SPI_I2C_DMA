@@ -1,15 +1,15 @@
 #include "app.h"
+
 uint8_t tst;
-char data_In[30];
-char data_Out[30]="FREANT";
+char *data_In;
 
 void DMA1_Channel2_IRQHandler() 
 {
     if (DMA1->ISR & DMA_ISR_TCIF2) 
 		{
-				Read_SPI1_DMA1(data_In);
-				//data_Out=data_In;
-				SPI1_DMA1_TransmitReceive(data_Out);
+				data_In=Read_SPI1_DMA1();
+
+				SPI1_DMA1_TransmitReceive(data_In);
         DMA1->IFCR |= DMA_IFCR_CTCIF2; // Очистка флага
     }
 		LED13();

@@ -1,11 +1,10 @@
 #include "app.h"
-char rezultStr1 [SIZESTR];
+
 char rezultStr [SIZESTR];
-char receivedChar;
-uint8_t dataOut=0xAA;
-char* str_In;
-char str_Out[SIZESTR];
+char* receivedChar;
+uint32_t* str_In;
 uint8_t tst;
+
 void DMA1_Stream4_IRQHandler(void)
 {
     LED7();
@@ -18,25 +17,12 @@ void DMA1_Stream4_IRQHandler(void)
 
 void DMA1_Stream3_IRQHandler(void)
 {
-		
     LED6();
 		
     if (DMA1->LISR & DMA_LISR_TCIF3)
     {
-				str_In=Read_SPI2_DMA();
-				
-        if(str_Out!= str_In)
-        {
-            
-						for(int i=0; i < SIZESTR; i++)
-						{
-							str_Out[i]=str_In[i];
-						}
-						
-            snprintf(rezultStr, sizeof rezultStr, "%s",str_Out);
-            DMA2_SetString(rezultStr);
-        }
-				
+						str_In=Read_SPI2_DMA();
+			
         DMA1->LIFCR |= DMA_LIFCR_CTCIF3; // Сбрасываем флаг
     }
 }
@@ -63,8 +49,10 @@ void DMA2_Stream2_IRQHandler(void)
 
 void ExecutorTerminal()
 {
-    receivedChar = DMA2_ReadChar(); // Читаем
-		;
+  receivedChar = DMA2_ReadChar(); // Читаем из консоли
+	// отправляем в консоль
+	snprintf(rezultStr, sizeof rezultStr, "%s%s",set_infoStr,(char*)str_In);
+	DMA2_SetString(rezultStr);
 }
 
 /////////////////
@@ -74,11 +62,10 @@ int main()
     Init_LED();
     Init_USART1(BAUND_RATE);
     Init_SPI();
-		uint8_t tst;
+
     while(1)
     {
-				snprintf(rezultStr1, sizeof rezultStr1, "%s: %c", set_infoStr,receivedChar);
-				SPI2_DMA_TransmitReceive(rezultStr1);
+				SPI2_DMA_TransmitReceive(receivedChar);
         //tst = SPI2_TransmitReceive(0xDF);//test net DMA
     }
 		

@@ -7,9 +7,9 @@
 #include "init_USART.h"
 
 #define BAUND_RATE 9600
-#define SIZESTR 30
+#define SIZESTR 50
 
-char set_infoStr[30]="Otvet ot STM32F103 SPI: ";
+char* set_infoStr="Otvet ot STM32F103 SPI: ";
 
 void ExecutorTerminal(void);
 

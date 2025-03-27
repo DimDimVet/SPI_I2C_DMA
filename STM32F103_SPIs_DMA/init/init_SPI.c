@@ -1,9 +1,8 @@
 #include "init_SPI.h"
 
-uint8_t sizeBufRxSPI=30;
-char dataBufRxSPI[30];
+char dataBufRxSPI[SIZE_BUF];
 
-void Init_SPI()//main init spi
+void Init_SPI()
 {
 		Enable_RCC_SPI1();
 		Config_GPIO_SPI1();
@@ -53,7 +52,7 @@ void Config_SPI1()
 		SPI1->CR1 &= ~SPI_CR1_RXONLY;//Только прием mode:slave
 		SPI1->CR1 &= ~SPI_CR1_SSM;// Программное управление mode:master1
 		SPI1->CR1 &= ~SPI_CR1_SSI;// Внутренний раб выбор mode:master1
-		SPI1->CR1 |= SPI_CR1_LSBFIRST;//Формат кадра LSB
+		SPI1->CR1 &= ~SPI_CR1_LSBFIRST;//Формат кадра LSB
 		SPI1->CR1 &= ~SPI_CR1_BR_0;// f/4
 		SPI1->CR1 &= ~SPI_CR1_BR_1;// f/4
 		SPI1->CR1 &= ~SPI_CR1_BR_2;// f/4
@@ -64,6 +63,8 @@ void Config_SPI1()
 		SPI1->CR2 |=SPI_CR2_RXDMAEN;//переключили дма на spi - чтение, DMAR = Rx
 		
 		SPI1->CR1 |= SPI_CR1_SPE;//Вкл SPI
+		
+		
 }
 
 void Config_SPI1_DMA1()
@@ -100,7 +101,7 @@ void Config_SPI1_DMA1()
 		DMA1_Channel2->CCR &= ~DMA_CCR2_DIR;//Направление передачи данных
 		DMA1_Channel2->CCR |= DMA_CCR2_TCIE;//разрешение прерывания по завершению передачи
 		DMA1_Channel2->CPAR = (uint32_t)(&SPI1->DR); //Адрес регистра данных spi
-		DMA1_Channel2->CNDTR = sizeBufRxSPI; //размер массива
+		DMA1_Channel2->CNDTR = SIZE_BUF; //размер массива
 		DMA1_Channel2->CMAR = (uint32_t)dataBufRxSPI; //Адрес буфера
 		DMA1_Channel2->CCR |= DMA_CCR2_EN; // Включение канала DMA
 		
@@ -130,28 +131,16 @@ uint8_t SPI_TransmitReceive(uint8_t data)
 		}
 }
 
-char* Read_SPI1_DMA1(char *str_data)
+char* Read_SPI1_DMA1()
 {
-    //return dataBufRxSPI[0];
-		
-//		char* str_temp;
-//		
-		for(int i=0; i < 30; i++)
-		{
-			str_data[i]=dataBufRxSPI[i];
-		}
-		
     return dataBufRxSPI;
 }
 
 
 void SPI1_DMA1_TransmitReceive(char *str_data)
 {
-//		uint8_t sizeTx;
-//		sizeTx = strlen(str_data);
-
     DMA1_Channel3->CCR &= ~DMA_CCR3_EN;
-    DMA1_Channel3->CNDTR = 30;		
+    DMA1_Channel3->CNDTR = SIZE_BUF;		
     DMA1_Channel3->CMAR = (uint32_t)str_data; // Указание адреса буфера передачи
     DMA1_Channel3->CCR |= DMA_CCR3_EN;     // Включаем DMA
 }

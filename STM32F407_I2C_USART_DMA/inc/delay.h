@@ -1,7 +1,7 @@
 #ifndef DELAY_H_
 #define DELAY_H_
 
-#include "stm32f10x.h"
+#include "stm32f4xx.h"                  // Device header
 
 #define US SystemCoreClock /1000000 //SystemCoreClock=72000000
 #define SYSTICK_MAX_VALUE 16777215
@@ -12,4 +12,3 @@ void delay_ms(int ms);
 void delay_s(int s);
 
 #endif
-

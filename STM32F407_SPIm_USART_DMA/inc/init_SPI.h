@@ -5,8 +5,7 @@
 #include <string.h>
 #include "stm32f4xx.h"
 
-#define SIZE_DATA_TX 1
-
+#define SIZE_BUF_RX_SPI 10
 
 void Init_SPI(void);
 void Enable_RCC_SPI1(void);
@@ -16,7 +15,7 @@ void Config_SPI1_DMA1(void);
 
 uint8_t SPI2_TransmitReceive(uint8_t data);
 void SPI2_DMA_TransmitReceive(char *str_data);
-char* Read_SPI2_DMA(void);
+uint32_t* Read_SPI2_DMA(void);
 
 #endif
 

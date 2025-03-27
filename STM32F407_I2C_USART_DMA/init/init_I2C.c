@@ -1,66 +1,67 @@
-#include "init_SPI.h"
+#include "init_I2C.h"
 
-uint32_t dataBufRxSPI[SIZE_BUF_RX_SPI];
 
-void Init_SPI()
+
+uint32_t dataBufRxSPI[1];
+
+void Init_I2C()
 {
-    Enable_RCC_SPI1();
-    Config_GPIO_SPI1();
-    Config_SPI1();
-    Config_SPI1_DMA1();
+    Enable_RCC_I2C();
+    Config_GPIO_I2C();
+    Config_I2C();
+    //Config_I2C_DMA1();
 }
 
-void Enable_RCC_SPI1()
+void Enable_RCC_I2C()
 {
     RCC->AHB1ENR |= 1 << RCC_AHB1ENR_GPIOBEN_Pos; // Включаем тактирование порта B
-    RCC->APB1ENR |= 1 << RCC_APB1ENR_SPI2EN_Pos; // Включаем тактирование SPI2
-    RCC->AHB1ENR |= 1 << RCC_AHB1ENR_DMA1EN_Pos; // Включаем тактирование DMA1
+    RCC->APB1ENR |= 1 << RCC_APB1ENR_I2C1EN_Pos; // Включаем тактирование SPI2
+    //RCC->AHB1ENR |= 1 << RCC_AHB1ENR_DMA1EN_Pos; // Включаем тактирование DMA1
 }
 
-void Config_GPIO_SPI1()
+void Config_GPIO_I2C()
 {
-    //PB13(SCK), PB14(MISO), PB15(MOSI)
+//    //PB6 (SCL), PB7 (SDA)
 
-    GPIOB->MODER |= 0 << GPIO_MODER_MODE13_Pos; // Очистка режима для PB13
-    GPIOB->MODER |= 2 << GPIO_MODER_MODE13_Pos;   // Альтернативная функция для PB13(SCK)
+    GPIOB->MODER |= 0 << GPIO_MODER_MODE6_Pos; // Очистка режима для PB6
+    GPIOB->MODER |= 2 << GPIO_MODER_MODE6_Pos;   // Альтернативная функция для PB6 (SCL)
 
-    GPIOB->MODER |= 0 << GPIO_MODER_MODE14_Pos;  // Очистка режима для PB14
-    GPIOB->MODER |= 2 << GPIO_MODER_MODE14_Pos;   // Альтернативная функция для PB14(MISO)
+    GPIOB->MODER |= 0 << GPIO_MODER_MODE7_Pos;  // Очистка режима для PB7
+    GPIOB->MODER |= 2 << GPIO_MODER_MODE7_Pos;   // Альтернативная функция для PB7 (SDA)
 
-    GPIOB->MODER |= 0 << GPIO_MODER_MODE15_Pos;  // Очистка режима для PB15
-    GPIOB->MODER |= 2 << GPIO_MODER_MODE15_Pos;   // Альтернативная функция для PB15(MOSI)
-
-    GPIOB->AFR[1] |= 5 << GPIO_AFRH_AFSEL13_Pos;// AF5 для SPI1 PB13(SCK)
-    GPIOB->AFR[1] |= 5 << GPIO_AFRH_AFSEL14_Pos;// AF5 для SPI1 PB14(MISO)
-    GPIOB->AFR[1] |= 5 << GPIO_AFRH_AFSEL15_Pos;// AF5 для SPI1 PB15(MOSI)
+    GPIOB->AFR[0] |= 5 << GPIO_AFRL_AFSEL6_Pos;// AF4 для I2C PB6 (SCL)
+    GPIOB->AFR[0] |= 5 << GPIO_AFRL_AFSEL7_Pos;// AF4 для I2C PB7 (SDA)
+	
 }
 
-void Config_SPI1()
+void Config_I2C()
 {
-    SPI2->CR1 = 0;//reset
+//    I2C1->CR1 |= I2C_CR1_PE; // Включение I2C
+//    I2C1->CR2 |= (16 << 0); // Частота 16 МГц, 16 тактов
+//    I2C1->CCR = 80; // Настройка условного задержки
+//    I2C1->TRISE = 17; // Максимальное время подъема
+	
+		//настраиваем модуль в режим I2C
+	I2C2->CR1 &= ~2C_CR1_SMBUS;
+	
+        //указываем частоту тактирования модуля
+	I2C2->CR2 &= ~I2C_CR2_FREQ;
+	I2C2->CR2 |= 42; // Fclk1=168/4=42MHz 
+	
+        //конфигурируем I2C, standart mode, 100 KHz duty cycle 1/2	
+	I2C2->CCR &= ~(I2C_CCR_FS | I2C_CCR_DUTY);
+        //задаем частоту работы модуля SCL по формуле 10 000nS/(2* TPCLK1) 
+	I2C2->CCR |= 208; //10 000ns/48ns = 208
+	
+	//Standart_Mode = 1000nS, Fast_Mode = 300nS, 1/42MHz = 24nS
+	I2C2->TRISE = 42; //(1000nS/24nS)+1
 
-    SPI2->CR1 |= 1 << SPI_CR1_MSTR_Pos;// master
-    SPI2->CR1 |= 0 << SPI_CR1_BIDIMODE_Pos;//включение режима двунаправленных данных mode:master
-    SPI2->CR1 |= 0 << SPI_CR1_BIDIOE_Pos;//включение вывода в двунаправленном режиме
-    SPI2->CR1 |= 0 << SPI_CR1_CRCEN_Pos;//аппаратный расчет CRC включен 0
-    SPI2->CR1 |= 0 << SPI_CR1_CRCNEXT_Pos;//следующая передача CRC 0
-    SPI2->CR1 |= 0 << SPI_CR1_DFF_Pos;//16-битный формат кадра данных0
-    SPI2->CR1 |= 0 << SPI_CR1_RXONLY_Pos;//Только прием mode:slave
-    SPI2->CR1 |= 1 << SPI_CR1_SSM_Pos;// Программное управление mode:master
-    SPI2->CR1 |= 1 << SPI_CR1_SSI_Pos;// Внутренний раб выбор mode:master
-    SPI2->CR1 |= 0 << SPI_CR1_LSBFIRST_Pos;//Формат кадра LSB0
-    SPI2->CR1 |= 4 << SPI_CR1_BR_Pos;// f/4
-    SPI2->CR1 |= 1 << SPI_CR1_CPOL_Pos;// начальный фронт
-    SPI2->CR1 |= 1 << SPI_CR1_CPHA_Pos;// фаза...
+        //включаем модуль
+	I2C2->CR1 |= I2C_CR1_PE;
 
-    SPI2->CR2 =0;
-    SPI2->CR2 |= 1 << SPI_CR2_RXDMAEN_Pos;// Включаем DMA
-    SPI2->CR2 |= 1 << SPI_CR2_TXDMAEN_Pos;// Включаем DMA
-
-    SPI2->CR1 |= 1 << SPI_CR1_SPE_Pos;//Вкл SPI
 }
 
-void Config_SPI1_DMA1()
+void Config_I2C_DMA1()
 {
     //Stream 3-Channel 0 SPI2_RX, Stream 4 Channel 0 SPI2_TX = 000: channel 0 selected
     DMA1_Stream4->CR = 0;
@@ -95,7 +96,7 @@ void Config_SPI1_DMA1()
     DMA1_Stream3->CR |= 0 << DMA_SxCR_DIR_Pos;//направление передачи данных 00: периферийное устройство-память 01: память-периферийное устройство
     DMA1_Stream3->CR |= 1 << DMA_SxCR_TCIE_Pos;//Разрешение прерывания завершения передачи
     DMA1_Stream3->PAR = (uint32_t)(&SPI2->DR);// Адрес регистра данных spi
-    DMA1_Stream3->NDTR = SIZE_BUF_RX_SPI;//размер массива
+    DMA1_Stream3->NDTR = 1;//размер массива
     DMA1_Stream3->M0AR = (uint32_t)dataBufRxSPI;// Адрес буфера
     DMA1_Stream3->CR |= 1 << DMA_SxCR_EN_Pos;//включение потока
 
@@ -106,7 +107,45 @@ void Config_SPI1_DMA1()
 }
 
 ///////////////////////
-uint8_t SPI2_TransmitReceive(uint8_t data)
+void I2C_Start(void) {
+    I2C1->CR1 |= I2C_CR1_START; // Генерация стартового состояния
+    while (!(I2C1->SR1 & I2C_SR1_SB)); // Ожидание завершения
+}
+
+void I2C_Stop(void) {
+    I2C1->CR1 |= I2C_CR1_STOP; // Генерация стоп-состояния
+    //while (I2C1->CR1 & I2C_CR1_STOP); // Ожидание завершения
+}
+
+void I2C_SendByte(uint8_t data) {
+    I2C1->DR = data; // Отправка байта
+    while (!(I2C1->SR1 & I2C_SR1_TXE)); // Ожидание, пока передача завершится
+}
+
+uint8_t I2C_ReadByte(void) {
+    while (!(I2C1->SR1 & I2C_SR1_RXNE)); // Ожидание получения байта
+    return I2C1->DR; // Чтение байта
+}
+
+void I2C_Write(uint8_t address, uint8_t *data, uint16_t size) {
+    I2C_Start();
+    I2C_SendByte(address << 1); // Адрес устройства и бит записи
+    for (uint16_t i = 0; i < size; i++) {
+        I2C_SendByte(data[i]);
+    }
+    I2C_Stop();
+}
+
+void I2C_Read(uint8_t address, uint8_t *data, uint16_t size) {
+    I2C_Start();
+    I2C_SendByte((address << 1) | 1); // Адрес устройства и бит чтения
+    for (uint16_t i = 0; i < size - 1; i++) {
+        data[i] = I2C_ReadByte();
+    }
+    I2C_Stop();
+}
+
+uint8_t I2C_TransmitReceive(uint8_t data)
 {
     while (!(SPI2->SR & SPI_SR_TXE))
     {}
@@ -117,12 +156,12 @@ uint8_t SPI2_TransmitReceive(uint8_t data)
     return SPI2->DR;
 }
 
-uint32_t* Read_SPI2_DMA()
+uint32_t* Read_I2C_DMA()
 {
     return dataBufRxSPI;
 }
 
-void SPI2_DMA_TransmitReceive(char *str_data)
+void I2C_DMA_TransmitReceive(char *str_data)
 {
 		uint8_t sizeTxU = strlen(str_data);
 	

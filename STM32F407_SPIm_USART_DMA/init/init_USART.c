@@ -1,6 +1,5 @@
 #include "init_USART.h"
 
-uint8_t sizeBufRxUSART=SIZE_BUF_RX_USART;
 char dataBufRxUSART[SIZE_BUF_RX_USART];
 
 void Init_USART1(int baudRate)
@@ -62,8 +61,8 @@ void Config_USART1_DMA2()
     DMA2_Stream7->CR |= 1 << DMA_SxCR_DIR_Pos;//направление передачи данных 00: периферийное устройство-память 01: память-периферийное устройство
     DMA2_Stream7->CR |= 1 << DMA_SxCR_TCIE_Pos;//Разрешение прерывания завершения передачи
     DMA2_Stream7->PAR = (uint32_t)(&USART1->DR);// Адрес регистра данных spi
-    DMA2_Stream7->NDTR = 5;//размер массива
-    DMA2_Stream7->M0AR = 5;// Адрес буфера
+    DMA2_Stream7->NDTR = 0;//размер массива
+    DMA2_Stream7->M0AR = 0;// Адрес буфера
     DMA2_Stream7->CR |= 1 << DMA_SxCR_EN_Pos;//включение потока
 
     DMA2_Stream2->CR = 0;
@@ -80,7 +79,7 @@ void Config_USART1_DMA2()
     DMA2_Stream2->CR |= 0 << DMA_SxCR_DIR_Pos;//направление передачи данных 00: периферийное устройство-память 01: память-периферийное устройство
     DMA2_Stream2->CR |= 1 << DMA_SxCR_TCIE_Pos;//Разрешение прерывания завершения передачи
     DMA2_Stream2->PAR = (uint32_t)(&USART1->DR);// Адрес регистра данных spi
-    DMA2_Stream2->NDTR = sizeBufRxUSART;//размер массива
+    DMA2_Stream2->NDTR = SIZE_BUF_RX_USART;//размер массива
     DMA2_Stream2->M0AR = (uint32_t)dataBufRxUSART;// Адрес буфера
     DMA2_Stream2->CR |= 1 << DMA_SxCR_EN_Pos;//включение потока
 
@@ -91,16 +90,16 @@ void Config_USART1_DMA2()
 }
 ///////////////////////////
 
-char DMA2_ReadChar()//считываем массив[0]
+char* DMA2_ReadChar()//считываем массив[0]
 {
-    return dataBufRxUSART[0];
+    return dataBufRxUSART;
 }
 
 void DMA2_SetString(char* str)//Установка строки по символьно
 {
-    uint8_t sizeTxU;
+    uint8_t sizeTxU = strlen(str);
+
     DMA2_Stream7->CR &= ~DMA_SxCR_EN;
-    sizeTxU = strlen(str);
     DMA2_Stream7->NDTR = sizeTxU;
     DMA2_Stream7->M0AR = (uint32_t)str;
     DMA2_Stream7->CR |= DMA_SxCR_EN;
