@@ -1,7 +1,5 @@
 #include "init_I2C.h"
 
-
-
 uint32_t dataBufRxSPI[1];
 
 void Init_I2C()
@@ -17,6 +15,7 @@ void Enable_RCC_I2C()
     RCC->AHB1ENR |= 1 << RCC_AHB1ENR_GPIOBEN_Pos; // Включаем тактирование порта B
     RCC->APB1ENR |= 1 << RCC_APB1ENR_I2C1EN_Pos; // Включаем тактирование SPI2
     //RCC->AHB1ENR |= 1 << RCC_AHB1ENR_DMA1EN_Pos; // Включаем тактирование DMA1
+
 }
 
 void Config_GPIO_I2C()
@@ -35,22 +34,22 @@ void Config_GPIO_I2C()
 		GPIOB->OSPEEDR |= 3 << GPIO_OSPEEDR_OSPEED7_Pos;//скорость
 		GPIOB->PUPDR |= 1 << GPIO_PUPDR_PUPD7_Pos;//подтянем+
 		
-    GPIOB->AFR[1] |= 4 << GPIO_AFRL_AFSEL6_Pos;// AF4 для I2C PB6 (SCL)
-    GPIOB->AFR[1] |= 4 << GPIO_AFRL_AFSEL7_Pos;// AF4 для I2C PB7 (SDA)
+    GPIOB->AFR[0] |= 4 << GPIO_AFRL_AFSEL6_Pos;// AF4 для I2C PB6 (SCL)
+    GPIOB->AFR[0] |= 4 << GPIO_AFRL_AFSEL7_Pos;// AF4 для I2C PB7 (SDA)
 	
 }
 
 void Config_I2C()
 {
-		I2C1->CR1 |= 1 << I2C_CR1_SWRST_Pos;//сброс
-		I2C1->CR1 |= 0 << I2C_CR1_SWRST_Pos;//отключили сброс
+		I2C1->CR1=I2C_CR1_SWRST;//сброс
+		I2C1->CR1&=~I2C_CR1_SWRST;//отключили сброс
 		
-		I2C1->CR2 |= 36 << I2C_CR2_FREQ_Pos;//установка частоты
-		I2C1->CCR |= 180 << I2C_CCR_CCR_Pos;// Настройка условного задержки
-		I2C1->TRISE |= 37 << I2C_TRISE_TRISE_Pos;// Максимальное время подъема
+		I2C1->CR2 |= 16 << I2C_CR2_FREQ_Pos;//установка частоты
+		I2C1->CCR |= 80 << I2C_CCR_CCR_Pos;// Настройка условного задержки
+		I2C1->TRISE |= 17 << I2C_TRISE_TRISE_Pos;// Максимальное время подъема
 		
 		I2C1->CR1 |= 1 << I2C_CR1_PE_Pos;
-		
+
 }
 
 void Config_I2C_DMA1()
@@ -103,52 +102,84 @@ void I2C_Start(void)
 {
 		I2C1->CR1 |= 1 << I2C_CR1_ACK_Pos;
     I2C1->CR1 |= 1 << I2C_CR1_START_Pos; // Генерация стартового состояния
-    while (I2C_SR1_SB==0); // Ожидание завершения
+    while(!(I2C1->SR1 & I2C_SR1_SB)); // Ожидание завершения
 }
 
-void I2C_Stop(void) {
-    I2C1->CR1 |= I2C_CR1_STOP; // Генерация стоп-состояния
-   // while (I2C1->CR1 & I2C_SR1_STOP); // Ожидание завершения
+void I2C_Stop(void) 
+{
+    I2C1->CR1 |=1 << I2C_CR1_STOP_Pos; // Генерация стоп-состояния
+    while (I2C1->CR1 & I2C_SR1_STOPF); // Ожидание завершения
 }
 
-void I2C_SendByte(uint8_t data) {
-    I2C1->DR = data; // Отправка байта
-    while (!(I2C1->SR1 & I2C_SR1_TXE)); // Ожидание, пока передача завершится
+void I2C1_SendAddress(uint8_t addr)
+{
+    I2C1->DR = addr; // Отправка адреса
+    while (!(I2C1->SR1 & I2C_SR1_ADDR)); // Ждем подтверждения
+    I2C1->SR2; // Сброс флага
 }
 
-uint8_t I2C_ReadByte(void) {
+void I2C1_SendData(uint8_t data) 
+{
+    I2C1->DR = data; // Отправка данных
+    while (!(I2C1->SR1 & I2C_SR1_TXE)); // Ждем, пока передатчик готов
+}
+
+uint8_t I2C1_ReceiveData() 
+{
     while (!(I2C1->SR1 & I2C_SR1_RXNE)); // Ожидание получения байта
     return I2C1->DR; // Чтение байта
 }
 
-void I2C_Write(uint8_t address, uint8_t *data, uint16_t size) {
+void I2C_Write(uint8_t address, uint8_t *data, uint8_t size)
+{
     I2C_Start();
 		
-    I2C_SendByte(address << 1); // Адрес устройства и бит записи
-    for (uint16_t i = 0; i < size; i++) {
-        I2C_SendByte(data[i]);
+    I2C1_SendAddress(address << 1); // Адрес устройства и бит записи
+	
+    for (uint8_t i = 0; i < size; i++)
+		{
+        I2C1_SendData(data[i]);
     }
+		
     I2C_Stop();
 }
 
-void I2C_Read(uint8_t address, uint8_t *data, uint16_t size) {
-    I2C_Start();
-    I2C_SendByte((address << 1) | 1); // Адрес устройства и бит чтения
-    for (uint16_t i = 0; i < size - 1; i++) {
-        data[i] = I2C_ReadByte();
-    }
-    I2C_Stop();
-}
-
-uint8_t I2C_TransmitReceive(uint8_t data)
+void I2C_Read(uint8_t address, uint8_t *data, uint8_t size)
 {
-    while (!(SPI2->SR & SPI_SR_TXE))
-    {}
-    SPI2->DR = data;
+    I2C_Start();
+	
+    I2C1_SendAddress((address << 1) | 1); // Адрес устройства и бит чтения
+	
+    for (uint16_t i = 0; i < size - 1; i++)
+		{
+        data[i] = I2C1_ReceiveData();
+    }
+		
+    I2C_Stop();
+}
 
-    while (!(SPI2->SR & SPI_SR_RXNE))
-    {}
-    return SPI2->DR;
+uint8_t* I2C_Scan_Bus(uint8_t count)
+{
+		uint8_t* count_device;
+		
+		if(count <=0)
+		{
+				count=128;
+		};
+		
+		for (uint8_t i=0; i < count; i++)
+		{
+				I2C_Start();
+			
+				I2C1->DR=(i<<1|0); 
+        while(!(I2C1->SR1)|!(I2C1->SR2))
+				{};
+					
+				I2C_Stop();
+				*count_device++ =(I2C1->SR1&I2C_SR1_ADDR);
+		};
+		
+		return count_device;
 }
 
 uint32_t* Read_I2C_DMA()

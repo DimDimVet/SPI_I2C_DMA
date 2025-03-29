@@ -16,12 +16,14 @@ void Config_I2C_DMA1(void);
 
 void I2C_Start(void);
 void I2C_Stop(void);
-void I2C_SendByte(uint8_t data);
-uint8_t I2C_ReadByte(void);
-void I2C_Write(uint8_t address, uint8_t *data, uint16_t size);
-void I2C_Read(uint8_t address, uint8_t *data, uint16_t size);
-	
-uint8_t I2C_TransmitReceive(uint8_t data);
+void I2C1_SendAddress(uint8_t addr);
+void I2C1_SendData(uint8_t data);
+uint8_t I2C1_ReceiveData(void);
+
+void I2C_Write(uint8_t address, uint8_t *data, uint8_t size);
+void I2C_Read(uint8_t address, uint8_t *data, uint8_t size);
+uint8_t* I2C_Scan_Bus(uint8_t count);
+
 void I2C_DMA_TransmitReceive(char *str_data);
 uint32_t* Read_I2C_DMA(void);
 

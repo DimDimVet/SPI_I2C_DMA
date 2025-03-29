@@ -7,7 +7,7 @@
 
   <Targets>
     <Target>
-      <TargetName>STM32F407_I2C_USART_DMA</TargetName>
+      <TargetName>Target 1</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
       <pCCUsed>6190000::V6.19::ARMCLANG</pCCUsed>
@@ -49,7 +49,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\Objects\</OutputDirectory>
-          <OutputName>STM32F407_I2C_USART_DMA</OutputName>
+          <OutputName>4</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>0</CreateHexFile>
@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\STM32F407_I2C_USART_DMA;.\inc</IncludePath>
+              <IncludePath></IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -382,57 +382,12 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>app</GroupName>
+          <GroupName>Source Group 1</GroupName>
           <Files>
             <File>
               <FileName>app.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\app\app.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>inc</GroupName>
-          <Files>
-            <File>
-              <FileName>app.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\inc\app.h</FilePath>
-            </File>
-            <File>
-              <FileName>init_LED.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\inc\init_LED.h</FilePath>
-            </File>
-            <File>
-              <FileName>delay.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\inc\delay.h</FilePath>
-            </File>
-            <File>
-              <FileName>init_I2C.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\inc\init_I2C.h</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>init</GroupName>
-          <Files>
-            <File>
-              <FileName>init_LED.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\init\init_LED.c</FilePath>
-            </File>
-            <File>
-              <FileName>delay.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\init\delay.c</FilePath>
-            </File>
-            <File>
-              <FileName>init_I2C.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\init\init_I2C.c</FilePath>
+              <FilePath>.\app.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -452,13 +407,13 @@
       <component Cclass="CMSIS" Cgroup="CORE" Cvendor="ARM" Cversion="5.6.0" condition="ARMv6_7_8-M Device">
         <package name="CMSIS" schemaVersion="1.7.7" url="http://www.keil.com/pack/" vendor="ARM" version="5.9.0"/>
         <targetInfos>
-          <targetInfo name="STM32F407_I2C_USART_DMA"/>
+          <targetInfo name="Target 1"/>
         </targetInfos>
       </component>
       <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="2.6.3" condition="STM32F4 CMSIS">
         <package name="STM32F4xx_DFP" schemaVersion="1.6.3" url="http://www.keil.com/pack/" vendor="Keil" version="2.15.0"/>
         <targetInfos>
-          <targetInfo name="STM32F407_I2C_USART_DMA"/>
+          <targetInfo name="Target 1"/>
         </targetInfos>
       </component>
     </components>
@@ -468,7 +423,7 @@
         <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="2.6.3" condition="STM32F4 CMSIS"/>
         <package name="STM32F4xx_DFP" schemaVersion="1.6.3" url="http://www.keil.com/pack/" vendor="Keil" version="2.15.0"/>
         <targetInfos>
-          <targetInfo name="STM32F407_I2C_USART_DMA"/>
+          <targetInfo name="Target 1"/>
         </targetInfos>
       </file>
       <file attr="config" category="source" name="Drivers\CMSIS\Device\ST\STM32F4xx\Source\Templates\system_stm32f4xx.c" version="2.6.2">
@@ -476,7 +431,7 @@
         <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="2.6.3" condition="STM32F4 CMSIS"/>
         <package name="STM32F4xx_DFP" schemaVersion="1.6.3" url="http://www.keil.com/pack/" vendor="Keil" version="2.15.0"/>
         <targetInfos>
-          <targetInfo name="STM32F407_I2C_USART_DMA"/>
+          <targetInfo name="Target 1"/>
         </targetInfos>
       </file>
     </files>
