@@ -5,7 +5,7 @@
 #include <string.h>
 #include "stm32f4xx.h"
 
-#define I2C_ADDRESS 0x3C // Адрес устройства I2C
+#define I2C_ADDRESS 0x50 // Адрес устройства I2C
 #define BUFFER_SIZE_I2C 32
 
 void Init_I2C(void);
