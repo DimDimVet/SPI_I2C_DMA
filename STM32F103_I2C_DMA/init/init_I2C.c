@@ -24,43 +24,53 @@ void Config_GPIO_I2C()
  // Настраиваем PB6 (SCL), PB7 (SDA) как альтернативные функции
 
 		GPIOB->CRL &= ~(GPIO_CRL_MODE6 | GPIO_CRL_CNF6);//reset
-    GPIOB->CRL |= GPIO_CRL_MODE6_0; // PB6
+    //GPIOB->CRL |= GPIO_CRL_MODE6_0; // PB6
 		GPIOB->CRL |= GPIO_CRL_CNF6; // PB6 alt
 		
 		GPIOB->CRL &= ~(GPIO_CRL_MODE7 | GPIO_CRL_CNF7);//reset
-		GPIOB->CRL |= GPIO_CRL_MODE7_0; // PB7
+		//GPIOB->CRL |= GPIO_CRL_MODE7_0; // PB7
 		GPIOB->CRL |= GPIO_CRL_CNF7; // PB7 alt
 
 
 
 //SET_BIT(GPIOB->CRL, GPIO_CRL_CNF7_1 | GPIO_CRL_CNF6_1 | GPIO_CRL_CNF7_0 | GPIO_CRL_CNF6_0 |\
-//                  GPIO_CRL_MODE7_1 | GPIO_CRL_MODE6_1 | GPIO_CRL_MODE7_0 | GPIO_CRL_MODE6_0);
+                  GPIO_CRL_MODE7_1 | GPIO_CRL_MODE6_1 | GPIO_CRL_MODE7_0 | GPIO_CRL_MODE6_0);
 
-		    // Настраиваем PB6 (SCL) и PB7 (SDA) на альтернативные функции
+//		    // Настраиваем PB6 (SCL) и PB7 (SDA) на альтернативные функции
 //    GPIOB->CRL &= ~((GPIO_CRL_MODE6 | GPIO_CRL_CNF6) | (GPIO_CRL_MODE7 | GPIO_CRL_CNF7));
 //    GPIOB->CRL |= (GPIO_CRL_CNF6_0 | GPIO_CRL_CNF7_0); // Режим открытого стока
 		
 //		// Настраиваем PA4 (nSS) как вход, особеность slave SPI
 //    GPIOA->CRL &= ~GPIO_CRL_CNF4; // сбрасываем настройки
 //    GPIOA->CRL |= GPIO_CRL_MODE4_0; // режим входа с подтяжкой
+
+   // Настройка PB6 (SCL) и PB7 (SDA) на альтернативную функцию
+    //GPIOB->CRL &= ~(GPIO_CRL_MODE6 | GPIO_CRL_CNF6 | GPIO_CRL_MODE7 | GPIO_CRL_CNF7);
+    //GPIOB->CRL |= (GPIO_CRL_CNF6_1 | GPIO_CRL_CNF7_1); // Open-drain для SCL и SDA
 }
 
 void Config_I2C()
 {
+
+////    // Настройка I2C (100kHz)
+//    I2C1->CR1 |= I2C_CR1_SWRST;  // Сброс I2C
+//    I2C1->CR1 &= ~I2C_CR1_SWRST; // Снятие сброса
+
+//    I2C1->CCR = 10; // Устанавливаем делитель для 100kHz
+//    I2C1->TRISE = 10;  // Максимальное время подъема
+//    I2C1->OAR1 = (0x50); // Установка адреса устройства
+
+//    // Настройка I2C в режиме Slave
+//    I2C1->CR1 = 0; // Отключаем I2C
+//    I2C1->OAR1 = 0x30 << 1; // Устанавливаем адрес устройства
+//    I2C1->CR1 |= I2C_CR1_ACK; // Включаем подтверждение
+//    I2C1->CR1 |= I2C_CR1_PE; // Включаем I2C
 	
-    // Включаем тактирование I2C1
-    RCC->APB1ENR |= RCC_APB1ENR_I2C1EN;
-
-    // Настройка I2C (100kHz)
-    I2C1->CR1 |= I2C_CR1_SWRST;  // Сброс I2C
-    I2C1->CR1 &= ~I2C_CR1_SWRST; // Снятие сброса
-
-    I2C1->CCR = 0x28; // Устанавливаем делитель для 100kHz
-    I2C1->TRISE = 9;  // Максимальное время подъема
-    I2C1->OAR1 = (0x50); // Установка адреса устройства
-
-    // Включаем I2C
-    I2C1->CR1 |= I2C_CR1_PE;
+I2C1->CR1 &= ~I2C_CR1_PE; // Отключение I2C
+I2C1->CR2 = (SystemCoreClock); // SYSCLK в МГц
+I2C1->CCR = 210; // Настройка для 400 кГц
+I2C1->TRISE = 43; // Настройка TRISE
+I2C1->CR1 |= I2C_CR1_PE; // Включение I2C
 }
 
 void Config_SPI1_DMA1()
@@ -140,3 +150,80 @@ void SPI1_DMA1_TransmitReceive(char *str_data)
     DMA1_Channel3->CMAR = (uint32_t)str_data; // Указание адреса буфера передачи
     DMA1_Channel3->CCR |= DMA_CCR3_EN;     // Включаем DMA
 }
+
+
+///////////////////////
+//мер кода для режима Master:
+//#include "stm32f10x.h" // Подключаем библиотеку для работы с STM32
+
+//void I2C_Master_Init() {
+//    // Включение тактирования для I2C1
+//    RCC->APB1ENR |= RCC_APB1ENR_I2C1EN;
+//    
+//    // Включаем тактирование для GPIOB (если используются PB6 и PB7)
+//    RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;
+
+//    // Настройка PB6 (SCL) и PB7 (SDA) на альтернативную функцию
+//    GPIOB->CRL &= ~(GPIO_CRL_MODE6 | GPIO_CRL_CNF6 | GPIO_CRL_MODE7 | GPIO_CRL_CNF7);
+//    GPIOB->CRL |= (GPIO_CRL_MODE6_1 | GPIO_CRL_CNF6_1); // PB6: Output, Open-drain
+//    GPIOB->CRL |= (GPIO_CRL_MODE7_1 | GPIO_CRL_CNF7_1); // PB7: Output, Open-drain
+
+//    // Настройка I2C
+//    I2C1->CR1 = 0; // Отключаем I2C
+//    I2C1->CR2 = 36; // Частота тактирования 36 МГц
+//    I2C1->CCR = 180; // Частота передачи 100 КГц
+//    I2C1->TRISE = 37; // Максимальное время для одной передачи
+//    I2C1->CR1 |= I2C_CR1_PE; // Включаем I2C
+//}
+
+//void I2C_Master_Transmit(uint8_t address, uint8_t *data, uint16_t size) {
+//    // Выбор адреса подчиненного устройства
+//    I2C1->CR1 |= I2C_CR1_START;
+//    while (!(I2C1->SR1 & I2C_SR1_SB)); // Ожидание старта передачи
+
+//    I2C1->DR = address << 1; // Записываем адрес устройства
+//    while (!(I2C1->SR1 & I2C_SR1_ADDR)); // Ожидание завершения адресации
+
+//    (void)I2C1->SR2; // Сброс флага адреса
+
+//    for (uint16_t i = 0; i < size; i++) {
+//        I2C1->DR = data[i]; // Передаем байт данных
+//        while (!(I2C1->SR1 & I2C_SR1_BTF)); // Ожидание передаче полного байта
+//    }
+
+//    I2C1->CR1 |= I2C_CR1_STOP; // Отправка команды STOP
+
+
+///////////////////////
+//Пример кода для режима Slave:
+//#include "stm32f10x.h" // Подключаем библиотеку для работы с STM32
+
+//#define SLAVE_ADDRESS 0x30 // Адрес подчиненного устройства
+
+//void I2C_Slave_Init() {
+//    // Включение тактирования для I2C1
+//    RCC->APB1ENR |= RCC_APB1ENR_I2C1EN;
+
+//    // Включаем тактирование для GPIOB (если используются PB6 и PB7)
+//    RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;
+
+//    // Настройка PB6 (SCL) и PB7 (SDA) на альтернативную функцию
+//    GPIOB->CRL &= ~(GPIO_CRL_MODE6 | GPIO_CRL_CNF6 | GPIO_CRL_MODE7 | GPIO_CRL_CNF7);
+//    GPIOB->CRL |= (GPIO_CRL_CNF6_1); // PB6: Open-drain
+//    GPIOB->CRL |= (GPIO_CRL_CNF7_1); // PB7: Open-drain
+
+//    // Настройка I2C для режима Slave
+//    I2C1->CR1 = 0; // Отключаем I2C
+//    I2C1->OAR1 = SLAVE_ADDRESS << 1; // Устанавливаем адрес устройства
+//    I2C1->CR1 |= I2C_CR1_ACK; // Включаем подтверждение
+//    I2C1->CR1 |= I2C_CR1_PE; // Включаем I2C
+//}
+
+//void I2C_Slave_Receive() {
+//    while (!(I2C1->SR1 & I2C_SR1_ADDR)); // Ожидание адреса
+//    (void)I2C1->SR2; // Сброс флага адреса
+
+//    while (!(I2C1->SR1 & I2C_SR1_RXNE)); // Ожидание поступления данных
+//    uint8_t data = I2C1->DR; // Чтение данных
+//    // Обработка полученных данных
+//}
