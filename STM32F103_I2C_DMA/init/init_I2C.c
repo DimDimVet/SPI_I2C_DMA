@@ -23,30 +23,20 @@ void Config_GPIO_I2C()
 
  // Настраиваем PB6 (SCL), PB7 (SDA) как альтернативные функции
 
-		GPIOB->CRL &= ~(GPIO_CRL_MODE6 | GPIO_CRL_CNF6);//reset
-    //GPIOB->CRL |= GPIO_CRL_MODE6_0; // PB6
-		GPIOB->CRL |= GPIO_CRL_CNF6; // PB6 alt
-		
-		GPIOB->CRL &= ~(GPIO_CRL_MODE7 | GPIO_CRL_CNF7);//reset
-		//GPIOB->CRL |= GPIO_CRL_MODE7_0; // PB7
-		GPIOB->CRL |= GPIO_CRL_CNF7; // PB7 alt
+//		GPIOB->CRL &= ~(GPIO_CRL_MODE6 | GPIO_CRL_CNF6);//reset
+//    GPIOB->CRL |= GPIO_CRL_MODE6; // PB6
+//		GPIOB->CRL |= (GPIO_CRL_CNF6_0 | GPIO_CRL_CNF6_1); // PB6 alt
+//		
+//		GPIOB->CRL &= ~(GPIO_CRL_MODE7 | GPIO_CRL_CNF7);//reset
+//		GPIOB->CRL |= GPIO_CRL_MODE7; // PB7
+//		GPIOB->CRL |= (GPIO_CRL_CNF7_0 | GPIO_CRL_CNF7_1); // PB7 alt
 
 
 
-//SET_BIT(GPIOB->CRL, GPIO_CRL_CNF7_1 | GPIO_CRL_CNF6_1 | GPIO_CRL_CNF7_0 | GPIO_CRL_CNF6_0 |\
-                  GPIO_CRL_MODE7_1 | GPIO_CRL_MODE6_1 | GPIO_CRL_MODE7_0 | GPIO_CRL_MODE6_0);
+    GPIOB->CRL &= ~(GPIO_CRL_MODE6 | GPIO_CRL_CNF6 | GPIO_CRL_MODE7 | GPIO_CRL_CNF7);
+    GPIOB->CRL |= (GPIO_CRL_MODE6_1 | GPIO_CRL_CNF6_1); // PB6: Output, Open-drain
+    GPIOB->CRL |= (GPIO_CRL_MODE7_1 | GPIO_CRL_CNF7_1); // PB7: Output, Open-drain
 
-//		    // Настраиваем PB6 (SCL) и PB7 (SDA) на альтернативные функции
-//    GPIOB->CRL &= ~((GPIO_CRL_MODE6 | GPIO_CRL_CNF6) | (GPIO_CRL_MODE7 | GPIO_CRL_CNF7));
-//    GPIOB->CRL |= (GPIO_CRL_CNF6_0 | GPIO_CRL_CNF7_0); // Режим открытого стока
-		
-//		// Настраиваем PA4 (nSS) как вход, особеность slave SPI
-//    GPIOA->CRL &= ~GPIO_CRL_CNF4; // сбрасываем настройки
-//    GPIOA->CRL |= GPIO_CRL_MODE4_0; // режим входа с подтяжкой
-
-   // Настройка PB6 (SCL) и PB7 (SDA) на альтернативную функцию
-    //GPIOB->CRL &= ~(GPIO_CRL_MODE6 | GPIO_CRL_CNF6 | GPIO_CRL_MODE7 | GPIO_CRL_CNF7);
-    //GPIOB->CRL |= (GPIO_CRL_CNF6_1 | GPIO_CRL_CNF7_1); // Open-drain для SCL и SDA
 }
 
 void Config_I2C()
@@ -66,11 +56,26 @@ void Config_I2C()
 //    I2C1->CR1 |= I2C_CR1_ACK; // Включаем подтверждение
 //    I2C1->CR1 |= I2C_CR1_PE; // Включаем I2C
 	
-I2C1->CR1 &= ~I2C_CR1_PE; // Отключение I2C
-I2C1->CR2 = (SystemCoreClock); // SYSCLK в МГц
-I2C1->CCR = 210; // Настройка для 400 кГц
-I2C1->TRISE = 43; // Настройка TRISE
-I2C1->CR1 |= I2C_CR1_PE; // Включение I2C
+////I2C1->CR1 &= ~I2C_CR1_PE; // Отключение I2C
+////I2C1->CR2 = 8; // SYSCLK в МГц
+////I2C1->CCR = 50;//210; // Настройка для 400 кГц
+////I2C1->TRISE = 9;//43; // Настройка TRISE
+
+//////I2C1->CR2 |= I2C_CR2_ITBUFEN;
+//////I2C1->CR2 |= I2C_CR2_ITEVTEN;
+
+//////I2C1->OAR1 = (0x1A); // Адрес слейва
+//////I2C1->CR1 |= I2C_CR1_ACK;
+
+////I2C1->CR1 |= I2C_CR1_PE; // Включение I2C
+
+    // Настройка I2C
+    I2C1->CR1 = 0; // Отключаем I2C
+    I2C1->CR2 = 42; // Частота тактирования 36 МГц
+    I2C1->CCR = 210; // Частота передачи 100 КГц
+    I2C1->TRISE = 9; // Максимальное время для одной передачи
+    I2C1->CR1 |= I2C_CR1_PE; // Включаем I2C
+
 }
 
 void Config_SPI1_DMA1()

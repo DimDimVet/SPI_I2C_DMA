@@ -9,14 +9,14 @@ int main()
 {
     Init_LED();
     Init_I2C();
-//    Init_SPI();
 
 	    // Передача данных
     //I2C_Write(0x30, txBuffer, sizeof(txBuffer));
 
     // Прием данных
    // I2C_Read(I2C_ADDRESS, rxBuffer, sizeof(rxBuffer));
-	int a=0;
+				 //I2C_Write(0x1A, txBuffer, sizeof(txBuffer));
+
     while(1)
     {
 				//I2C_Write(0x30, txBuffer, sizeof(txBuffer));
