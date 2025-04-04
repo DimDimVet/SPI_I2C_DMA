@@ -21,16 +21,28 @@ void I2C1_EV_IRQHandler(void)
     }
 }
 
-void I2C_Slave_Receive() {
-    while (!(I2C1->SR1 & I2C_SR1_ADDR)); // Ожидание адреса
-    (void)I2C1->SR2; // Сброс флага адреса
+void I2C_Slave_Receive() 
+{
+uint8_t data;
+    //while (!(I2C1->SR1 & I2C_SR1_ADDR)); // Ожидание адреса
+    //(void)I2C1->SR2; // Сброс флага адреса
+		if (I2C1->SR1 & I2C_SR1_ADDR)
+		{ // Проверка адреса
+        (void)I2C1->SR2; // Сброс флага
+    }
 
-    while (!(I2C1->SR1 & I2C_SR1_RXNE)); // Ожидание поступления данных
-    uint8_t data = I2C1->DR; // Чтение данных
+    //while (!(I2C1->SR1 & I2C_SR1_RXNE)); // Ожидание поступления данных
+    //uint8_t data = I2C1->DR; // Чтение данных
+		if (I2C1->SR1 & I2C_SR1_RXNE) 
+		{ // Если данные приняты
+        data = I2C1->DR; // Чтение данных
+        // Обработка received_data
+    }
+		
     // Обработка полученных данных (например, сохранение в буфер)
-		    if (I2C1->SR1 & I2C_SR1_TXE) 
+		if (I2C1->SR1 & I2C_SR1_TXE) 
 		{ // Если готовы отправить данные
-        I2C1->DR = data;
+        I2C1->DR = 0xAF;
     }
 }
 
@@ -70,8 +82,8 @@ int main()
 	
 	while(1)
 	{
-			count_device=I2C_Scan_Bus(128);
-			//I2C_Slave_Receive(); // Получение данныхI2C_Slave_Receive(); // Получение данных
+			//count_device=I2C_Scan_Bus(128);
+			I2C_Slave_Receive(); // Получение данныхI2C_Slave_Receive(); // Получение данных
 			delay_ms(100);
 	}
 	return 0;

@@ -26,13 +26,13 @@ void Config_GPIO_I2C()
     GPIOB->MODER |= 2 << GPIO_MODER_MODE6_Pos;   // Альтернативная функция для PB6 (SCL)
 		GPIOB->OTYPER |= 1 << GPIO_OTYPER_OT6_Pos;//открытый коллектор
 		GPIOB->OSPEEDR |= 3 << GPIO_OSPEEDR_OSPEED6_Pos;//скорость
-		GPIOB->PUPDR |= 2 << GPIO_PUPDR_PUPD6_Pos;//подтянем+
+		//GPIOB->PUPDR |= 2 << GPIO_PUPDR_PUPD6_Pos;//подтянем+
 
     GPIOB->MODER |= 0 << GPIO_MODER_MODE7_Pos;  // Очистка режима для PB7
     GPIOB->MODER |= 2 << GPIO_MODER_MODE7_Pos;   // Альтернативная функция для PB7 (SDA)
 		GPIOB->OTYPER |= 1 << GPIO_OTYPER_OT7_Pos;//открытый коллектор
 		GPIOB->OSPEEDR |= 3 << GPIO_OSPEEDR_OSPEED7_Pos;//скорость
-		GPIOB->PUPDR |= 2 << GPIO_PUPDR_PUPD7_Pos;//подтянем+
+		//GPIOB->PUPDR |= 2 << GPIO_PUPDR_PUPD7_Pos;//подтянем+
 	
 //		GPIOB->MODER &= ~(GPIO_MODER_MODER6 | GPIO_MODER_MODER7);
 //    GPIOB->MODER |= (2 << GPIO_MODER_MODER6_Pos | 2 << GPIO_MODER_MODER7_Pos); // Альтернативная функция
@@ -71,7 +71,7 @@ void Config_I2C()
         I2C1->CR2 = 16; //42; // Частота APB1 в MHz
 //				I2C1->OAR1 = (0x2A << 1); // Адрес слейва
 //				I2C1->CR1 |= I2C_CR1_ACK;
-        I2C1->CCR = 80; //210; // Настройка скорости I2C для 100kHz
+        I2C1->CCR = 180; //210; // Настройка скорости I2C для 100kHz
         I2C1->TRISE = 9; //43; // TRISE
         I2C1->CR1 |= I2C_CR1_PE; // Включаем I2C
 

@@ -34,8 +34,8 @@ void Config_GPIO_I2C()
 
 
     GPIOB->CRL &= ~(GPIO_CRL_MODE6 | GPIO_CRL_CNF6 | GPIO_CRL_MODE7 | GPIO_CRL_CNF7);
-    GPIOB->CRL |= (GPIO_CRL_MODE6_1 | GPIO_CRL_CNF6_1); // PB6: Output, Open-drain
-    GPIOB->CRL |= (GPIO_CRL_MODE7_1 | GPIO_CRL_CNF7_1); // PB7: Output, Open-drain
+    GPIOB->CRL |= (GPIO_CRL_MODE6_1 | GPIO_CRL_CNF6); // PB6: Output, Open-drain
+    GPIOB->CRL |= (GPIO_CRL_MODE7_1 | GPIO_CRL_CNF7); // PB7: Output, Open-drain
 
 }
 
@@ -71,9 +71,11 @@ void Config_I2C()
 
     // Настройка I2C
     I2C1->CR1 = 0; // Отключаем I2C
-    I2C1->CR2 = 42; // Частота тактирования 36 МГц
-    I2C1->CCR = 210; // Частота передачи 100 КГц
-    I2C1->TRISE = 9; // Максимальное время для одной передачи
+    I2C1->CR2 = 132; // Частота тактирования 36 МГц
+    ///I2C1->CCR = 500; // Частота передачи 100 КГц
+    ///I2C1->TRISE = 9; // Максимальное время для одной передачи
+    I2C1->OAR1 = 0x30 << 1; // Устанавливаем адрес устройства
+    I2C1->CR1 |= I2C_CR1_ACK; // Включаем подтверждение
     I2C1->CR1 |= I2C_CR1_PE; // Включаем I2C
 
 }
