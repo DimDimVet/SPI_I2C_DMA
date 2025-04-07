@@ -100,17 +100,23 @@ int main(void)
   while (1)
   {
       // Отправка данных
-        if (HAL_I2C_Master_Transmit(&hi2c1, I2C_ADDRESS, dataToSend, 2, HAL_MAX_DELAY) != HAL_OK) {
-            //printf("Error during transmission\r\n");
-        }
+//        if (HAL_I2C_Master_Transmit(&hi2c1, I2C_ADDRESS, dataToSend, 2, HAL_MAX_DELAY) != HAL_OK)
+//				{
+//            //printf("Error during transmission\r\n");
+//        }
 
-        HAL_Delay(1000);
+//        HAL_Delay(1000);
 
         // Чтение данных
-        if (HAL_I2C_Master_Receive(&hi2c1, I2C_ADDRESS, receivedData, 2, HAL_MAX_DELAY) != HAL_OK) {
+        if (HAL_I2C_Master_Receive(&hi2c1, I2C_ADDRESS, receivedData, 2, HAL_MAX_DELAY) != HAL_OK) 
+				{
             //printf("Error during reception\r\n");
-        } else {
+						HAL_Delay(1);
+        } 
+				else 
+				{
             //printf("Received Data: 0x%02X 0x%02X\r\n", receivedData[0], receivedData[1]);
+						HAL_Delay(1);
         }
 
         HAL_Delay(1000);

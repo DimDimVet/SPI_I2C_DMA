@@ -198,3 +198,34 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
+
+
+
+
+//#define I2C_ADDRESS 0x68 << 1  // Адрес I2C устройства
+//    uint8_t dataToSend[2] = {0x00, 0x07}; // Пример данных для отправки
+//    uint8_t receivedData[2];
+//  while (1)
+//  {
+//      // Отправка данных
+////        if (HAL_I2C_Master_Transmit(&hi2c1, I2C_ADDRESS, dataToSend, 2, HAL_MAX_DELAY) != HAL_OK)
+////				{
+////            //printf("Error during transmission\r\n");
+////        }
+
+////        HAL_Delay(1000);
+
+//        // Чтение данных
+//        if (HAL_I2C_Master_Receive(&hi2c1, I2C_ADDRESS, receivedData, 2, HAL_MAX_DELAY) != HAL_OK) 
+//				{
+//            //printf("Error during reception\r\n");
+//						HAL_Delay(1);
+//        } 
+//				else 
+//				{
+//            //printf("Received Data: 0x%02X 0x%02X\r\n", receivedData[0], receivedData[1]);
+//						HAL_Delay(1);
+//        }
+
+//        HAL_Delay(1000);
+//  }
