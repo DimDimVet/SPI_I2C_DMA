@@ -1,102 +1,75 @@
-/* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
-/* USER CODE END Header */
-/* Includes ------------------------------------------------------------------*/
+
 #include "main.h"
 #include "i2c.h"
 #include "gpio.h"
 
-#define I2C_ADDRESS 0x68 << 1  // Адрес I2C устройства
 
+uint8_t dataToSend[2] = {0x00, 0x07}; // Пример данных для отправки
+uint8_t receivedData[2];
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
-
-/* USER CODE END Includes */
-
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-
-/* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
-
-/* Private variables ---------------------------------------------------------*/
-
-/* USER CODE BEGIN PV */
-
-/* USER CODE END PV */
-
-/* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-/* USER CODE BEGIN PFP */
 
-/* USER CODE END PFP */
 
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
+uint8_t BufferCmp(uint8_t* pBuff1, uint8_t* pBuff2, uint16_t len)
+{
+	while (len--)
+	{
+		if((*pBuff1) != *pBuff2)
+		{
+			return 1;
+		}
+		pBuff1++;
+		pBuff2++;
+	}
+	return 0;
+}
 
-/* USER CODE END 0 */
+void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *I2cHandle)
+{
+	HAL_Delay(10);
+}
 
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
+void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *I2cHandle)
+{
+	HAL_Delay(10);
+
+	if(BufferCmp(dataToSend, receivedData, 2))
+	{
+		HAL_Delay(10);
+	}
+	else
+	{
+		HAL_Delay(10);
+	}
+}
+
+
+
 int main(void)
 {
 
-  /* USER CODE BEGIN 1 */
-
-  /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
   SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_I2C1_Init();
-  /* USER CODE BEGIN 2 */
 
-  /* USER CODE END 2 */
+		if(HAL_I2C_Slave_Receive(&hi2c1, receivedData, 2, HAL_MAX_DELAY)
+			!= HAL_OK)
+	{
+		Error_Handler();
+	}
+	//
+	while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY)
+	{};
+	//
+		if(HAL_I2C_Slave_Transmit(&hi2c1, dataToSend, 2, HAL_MAX_DELAY)
+			!= HAL_OK)
+	{
+		Error_Handler();
+	}
 
-    uint8_t dataToSend[2] = {0x00, 0x07}; // Пример данных для отправки
-    uint8_t receivedData[2];
   while (1)
   {
       // Отправка данных
@@ -108,20 +81,20 @@ int main(void)
 //        HAL_Delay(1000);
 
         // Чтение данных
-        if (HAL_I2C_Master_Receive(&hi2c1, I2C_ADDRESS, receivedData, 2, HAL_MAX_DELAY) != HAL_OK) 
-				{
-            //printf("Error during reception\r\n");
-						HAL_Delay(1);
-        } 
-				else 
-				{
-            //printf("Received Data: 0x%02X 0x%02X\r\n", receivedData[0], receivedData[1]);
-						HAL_Delay(1);
-        }
+//        if (HAL_I2C_Master_Receive(&hi2c1, I2C_ADDRESS, receivedData, 2, HAL_MAX_DELAY) != HAL_OK) 
+//				{
+//            //printf("Error during reception\r\n");
+//						HAL_Delay(1);
+//        } 
+//				else 
+//				{
+//            //printf("Received Data: 0x%02X 0x%02X\r\n", receivedData[0], receivedData[1]);
+//						HAL_Delay(1);
+//        }
 
-        HAL_Delay(1000);
+//        HAL_Delay(1000);
   }
-  /* USER CODE END 3 */
+
 }
 
 /**
@@ -136,38 +109,56 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
+//вариант 1
+//  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+//  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+//  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+//  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+//  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+//  {
+//    Error_Handler();
+//  }
 
-  /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+//  /** Initializes the CPU, AHB and APB buses clocks
+//  */
+//  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+//                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+//  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+//  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+//  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+//  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
-  {
-    Error_Handler();
-  }
+//  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+//  {
+//    Error_Handler();
+//  }
+
+//вариант 2
+	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+	RCC_OscInitStruct.HSEState       = RCC_HSE_ON;
+	RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
+	RCC_OscInitStruct.PLL.PLLState   = RCC_PLL_ON;
+	RCC_OscInitStruct.PLL.PLLSource  = RCC_PLLSOURCE_HSE;
+	RCC_OscInitStruct.PLL.PLLMUL     = RCC_PLL_MUL9;
+	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+	{
+		Error_Handler();
+	}
+
+	/*## STEP 2: Configure SYSCLK, HCLK, PCLK1, and PCLK2 ####################*/
+	RCC_ClkInitStruct.ClockType      = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK |
+			RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
+	RCC_ClkInitStruct.SYSCLKSource   = RCC_SYSCLKSOURCE_PLLCLK;
+	RCC_ClkInitStruct.AHBCLKDivider  = RCC_SYSCLK_DIV1;
+	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+	{
+		Error_Handler();
+	}
 }
 
-/* USER CODE BEGIN 4 */
 
-/* USER CODE END 4 */
-
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
