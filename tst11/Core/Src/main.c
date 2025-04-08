@@ -4,7 +4,7 @@
 #include "gpio.h"
 
 
-uint8_t dataToSend[2] = {0x00, 0x07}; // Пример данных для отправки
+uint8_t dataToSend[2] = {0xAA, 0xAF}; // Пример данных для отправки
 uint8_t receivedData[2];
 
 void SystemClock_Config(void);
@@ -48,15 +48,32 @@ void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *I2cHandle)
 int main(void)
 {
 
-  HAL_Init();
+  //HAL_Init();
+	
 
   SystemClock_Config();
 
   MX_GPIO_Init();
   MX_I2C1_Init();
 
-		if(HAL_I2C_Slave_Receive(&hi2c1, receivedData, 2, HAL_MAX_DELAY)
-			!= HAL_OK)
+//		while(HAL_I2C_Slave_Receive(&hi2c1, receivedData, 2, HAL_MAX_DELAY)!= HAL_OK)
+//	{
+//		Error_Handler();
+//	}
+//	//
+//	while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY)
+//	{};
+//	//
+//		if(HAL_I2C_Slave_Transmit(&hi2c1, dataToSend, 2, HAL_MAX_DELAY)
+//			!= HAL_OK)
+//	{
+//		Error_Handler();
+//	}
+
+  while (1)
+  {
+
+		while(HAL_I2C_Slave_Receive(&hi2c1, receivedData, 2, HAL_MAX_DELAY)!= HAL_OK)
 	{
 		Error_Handler();
 	}
@@ -70,29 +87,7 @@ int main(void)
 		Error_Handler();
 	}
 
-  while (1)
-  {
-      // Отправка данных
-//        if (HAL_I2C_Master_Transmit(&hi2c1, I2C_ADDRESS, dataToSend, 2, HAL_MAX_DELAY) != HAL_OK)
-//				{
-//            //printf("Error during transmission\r\n");
-//        }
-
-//        HAL_Delay(1000);
-
-        // Чтение данных
-//        if (HAL_I2C_Master_Receive(&hi2c1, I2C_ADDRESS, receivedData, 2, HAL_MAX_DELAY) != HAL_OK) 
-//				{
-//            //printf("Error during reception\r\n");
-//						HAL_Delay(1);
-//        } 
-//				else 
-//				{
-//            //printf("Received Data: 0x%02X 0x%02X\r\n", receivedData[0], receivedData[1]);
-//						HAL_Delay(1);
-//        }
-
-//        HAL_Delay(1000);
+   HAL_Delay(1000);
   }
 
 }
@@ -110,52 +105,29 @@ void SystemClock_Config(void)
   * in the RCC_OscInitTypeDef structure.
   */
 //вариант 1
-//  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-//  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-//  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-//  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
-//  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
-//  /** Initializes the CPU, AHB and APB buses clocks
-//  */
-//  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-//                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-//  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-//  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-//  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-//  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-//  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
-//вариант 2
-	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-	RCC_OscInitStruct.HSEState       = RCC_HSE_ON;
-	RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
-	RCC_OscInitStruct.PLL.PLLState   = RCC_PLL_ON;
-	RCC_OscInitStruct.PLL.PLLSource  = RCC_PLLSOURCE_HSE;
-	RCC_OscInitStruct.PLL.PLLMUL     = RCC_PLL_MUL9;
-	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-	{
-		Error_Handler();
-	}
-
-	/*## STEP 2: Configure SYSCLK, HCLK, PCLK1, and PCLK2 ####################*/
-	RCC_ClkInitStruct.ClockType      = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK |
-			RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
-	RCC_ClkInitStruct.SYSCLKSource   = RCC_SYSCLKSOURCE_PLLCLK;
-	RCC_ClkInitStruct.AHBCLKDivider  = RCC_SYSCLK_DIV1;
-	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
-	{
-		Error_Handler();
-	}
 }
 
 
