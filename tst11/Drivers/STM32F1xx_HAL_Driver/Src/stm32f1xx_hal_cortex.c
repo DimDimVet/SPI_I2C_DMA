@@ -228,7 +228,7 @@ void HAL_NVIC_SystemReset(void)
   */
 uint32_t HAL_SYSTICK_Config(uint32_t TicksNumb)
 {
-   return SysTick_Config(TicksNumb);
+   return SysTick_Config(TicksNumb);///---
 }
 /**
   * @}
