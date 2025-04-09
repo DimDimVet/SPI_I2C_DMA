@@ -4,166 +4,202 @@
 #include "gpio.h"
 
 
+#define TICK_FREQ_1KHZ 1U
+#define SLAVE_ADDR  0x68
+I2C_HandleTypeDef hi2c1;
+
 uint8_t dataToSend[2] = {0xAA, 0xAF}; // Пример данных для отправки
 uint8_t receivedData[2];
+
+
+	uint32_t pclk1;
+	uint32_t freqrange;
+	uint32_t ClockSpeed = 100000;
+
+
 
 void SystemClock_Config(void);
 
 
 uint8_t BufferCmp(uint8_t* pBuff1, uint8_t* pBuff2, uint16_t len)
 {
-	while (len--)
-	{
-		if((*pBuff1) != *pBuff2)
-		{
-			return 1;
-		}
-		pBuff1++;
-		pBuff2++;
-	}
-	return 0;
+    while (len--)
+    {
+        if((*pBuff1) != *pBuff2)
+        {
+            return 1;
+        }
+        pBuff1++;
+        pBuff2++;
+    }
+    return 0;
 }
 
 void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *I2cHandle)
 {
-	HAL_Delay(10);
+    HAL_Delay(10);
 }
 
 void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *I2cHandle)
 {
-	HAL_Delay(10);
+    HAL_Delay(10);
 
-	if(BufferCmp(dataToSend, receivedData, 2))
-	{
-		HAL_Delay(10);
-	}
-	else
-	{
-		HAL_Delay(10);
-	}
+    if(BufferCmp(dataToSend, receivedData, 2))
+    {
+        HAL_Delay(10);
+    }
+    else
+    {
+        HAL_Delay(10);
+    }
 }
 
 
 
 int main(void)
 {
+    SystemClock_Config();
 
-  //HAL_Init();
-	
+    MX_GPIO_Init();
+    MX_I2C1_Init();
 
-  SystemClock_Config();
+    while (1)
+    {
 
-  MX_GPIO_Init();
-  MX_I2C1_Init();
+        while(HAL_I2C_Slave_Receive(&hi2c1, receivedData, 2, HAL_MAX_DELAY)!= HAL_OK)
+        {
+            Error_Handler();
+        }
+        //
+        while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY)
+        {};
+        //
+        if(HAL_I2C_Slave_Transmit(&hi2c1, dataToSend, 2, HAL_MAX_DELAY)
+                != HAL_OK)
+        {
+            Error_Handler();
+        }
 
-//		while(HAL_I2C_Slave_Receive(&hi2c1, receivedData, 2, HAL_MAX_DELAY)!= HAL_OK)
-//	{
-//		Error_Handler();
-//	}
-//	//
-//	while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY)
-//	{};
-//	//
-//		if(HAL_I2C_Slave_Transmit(&hi2c1, dataToSend, 2, HAL_MAX_DELAY)
-//			!= HAL_OK)
-//	{
-//		Error_Handler();
-//	}
-
-  while (1)
-  {
-
-		while(HAL_I2C_Slave_Receive(&hi2c1, receivedData, 2, HAL_MAX_DELAY)!= HAL_OK)
-	{
-		Error_Handler();
-	}
-	//
-	while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY)
-	{};
-	//
-		if(HAL_I2C_Slave_Transmit(&hi2c1, dataToSend, 2, HAL_MAX_DELAY)
-			!= HAL_OK)
-	{
-		Error_Handler();
-	}
-
-   HAL_Delay(1000);
-  }
+        HAL_Delay(100);
+    }
 
 }
 
-/**
-  * @brief System Clock Configuration
-  * @retval None
-  */
+void MX_GPIO_Init(void)
+{
+		RCC->APB2ENR |=1 << RCC_APB2ENR_IOPDEN_Pos;
+		RCC->APB2ENR |=1 << RCC_APB2ENR_IOPAEN_Pos;
+		RCC->APB2ENR |=1 << RCC_APB2ENR_IOPBEN_Pos;
+		
+		GPIO_InitTypeDef GPIO_InitStruct = {0};
+		
+		GPIO_InitStruct.Pin   = GPIO_PIN_6 | GPIO_PIN_7;
+	GPIO_InitStruct.Mode  = GPIO_MODE_AF_OD;
+	GPIO_InitStruct.Pull  = GPIO_PULLUP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);	
+
+}
+
+#define I2C_RISE_TIME(__FREQRANGE__, __SPEED__)            (((__SPEED__) <= 100000U) ? ((__FREQRANGE__) + 1U) : ((((__FREQRANGE__) * 300U) / 1000U) + 1U))
+
+#define I2C_SPEED(__PCLK__, __SPEED__, __DUTYCYCLE__)      (((__SPEED__) <= 100000U)? (I2C_SPEED_STANDARD((__PCLK__), (__SPEED__))) : \
+                                                                  ((I2C_SPEED_FAST((__PCLK__), (__SPEED__), (__DUTYCYCLE__)) & I2C_CCR_CCR) == 0U)? 1U : \
+                                                                  ((I2C_SPEED_FAST((__PCLK__), (__SPEED__), (__DUTYCYCLE__))) | I2C_CCR_FS))
+																																	
+#define I2C_SPEED_FAST(__PCLK__, __SPEED__, __DUTYCYCLE__) (((__DUTYCYCLE__) == I2C_DUTYCYCLE_2)? I2C_CCR_CALCULATION((__PCLK__), (__SPEED__), 3U) : (I2C_CCR_CALCULATION((__PCLK__), (__SPEED__), 25U) | I2C_DUTYCYCLE_16_9))
+//#define I2C_SPEED_FAST(__PCLK__, __SPEED__, __DUTYCYCLE__) (((__DUTYCYCLE__) == I2C_DUTYCYCLE_2)? I2C_CCR_CALCULATION((__PCLK__), (__SPEED__), 3U) : (I2C_CCR_CALCULATION((__PCLK__), (__SPEED__), 25U) | I2C_DUTYCYCLE_16_9))
+#define I2C_DUTYCYCLE_2 0x00000000U
+
+#define I2C_STATE_NONE            ((uint32_t)(HAL_I2C_MODE_NONE)) 
+
+
+void MX_I2C1_Init(void)
+{
+	RCC->APB1ENR|=1 << RCC_APB1ENR_I2C1EN_Pos;
+
+
+I2C1->CR1 = 0;
+
+	hi2c1.Instance             = I2C1;
+//	hi2c1.Init.ClockSpeed      = 100000;
+	//hi2c1.Init.DutyCycle       = I2C_DUTYCYCLE_2;
+//	hi2c1.Init.OwnAddress1     = SLAVE_ADDR;
+//	hi2c1.Init.AddressingMode  = I2C_ADDRESSINGMODE_7BIT;
+//	hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+//	hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+//	hi2c1.Init.NoStretchMode   = I2C_NOSTRETCH_DISABLE;
+//	if(HAL_I2C_Init(&hi2c1) != HAL_OK)
+//	{
+//		Error_Handler();
+//	}
+	
+  /* Get PCLK1 frequency */
+  pclk1 = HAL_RCC_GetPCLK1Freq();
+
+  /* Calculate frequency range */
+  freqrange = I2C_FREQRANGE(pclk1);
+
+  /*---------------------------- I2Cx CR2 Configuration ----------------------*/
+  /* Configure I2Cx: Frequency range */
+  //MODIFY_REG(I2C1->CR2, I2C_CR2_FREQ, freqrange);
+	I2C1->CR2|=freqrange << I2C_CR2_FREQ_Pos;
+  /*---------------------------- I2Cx TRISE Configuration --------------------*/
+  /* Configure I2Cx: Rise Time */
+  //MODIFY_REG(I2C1->TRISE, I2C_TRISE_TRISE, I2C_RISE_TIME(freqrange, ClockSpeed));
+	I2C1->TRISE|=I2C_RISE_TIME(freqrange, ClockSpeed) << I2C_TRISE_TRISE_Pos;
+  /*---------------------------- I2Cx CCR Configuration ----------------------*/
+  /* Configure I2Cx: Speed */
+  //MODIFY_REG(I2C1->CCR, (I2C_CCR_FS | I2C_CCR_DUTY | I2C_CCR_CCR), I2C_SPEED(pclk1, ClockSpeed, I2C_DUTYCYCLE_2));
+	I2C1->CCR|= I2C_SPEED(pclk1, ClockSpeed, I2C_DUTYCYCLE_2) << (I2C_CCR_FS_Pos | I2C_CCR_DUTY_Pos | I2C_CCR_CCR_Pos);
+  /*---------------------------- I2Cx CR1 Configuration ----------------------*/
+  /* Configure I2Cx: Generalcall and NoStretch mode */
+  //MODIFY_REG(I2C1->CR1, (I2C_CR1_ENGC | I2C_CR1_NOSTRETCH), (I2C_GENERALCALL_DISABLE | I2C_NOSTRETCH_DISABLE));
+	I2C1->CR1|= (0|0) << (I2C_CR1_ENGC_Pos | I2C_CR1_NOSTRETCH_Pos);
+  /*---------------------------- I2Cx OAR1 Configuration ---------------------*/
+  /* Configure I2Cx: Own Address1 and addressing mode */
+  //MODIFY_REG(I2C1->OAR1, (I2C_OAR1_ADDMODE | I2C_OAR1_ADD0), (I2C_ADDRESSINGMODE_7BIT | SLAVE_ADDR));
+	//MODIFY_REG(I2C1->OAR1, (I2C_OAR1_ADD1_7), (SLAVE_ADDR));
+	I2C1->OAR1 =SLAVE_ADDR;
+	I2C1->OAR1|=(I2C_ADDRESSINGMODE_7BIT) << (I2C_OAR1_ADDMODE_Pos);
+	//I2C1->OAR1|=(I2C_ADDRESSINGMODE_7BIT | SLAVE_ADDR) << (I2C_OAR1_ADD8_9 | I2C_OAR1_ADD1_7);
+  /*---------------------------- I2Cx OAR2 Configuration ---------------------*/
+  /* Configure I2Cx: Dual mode and Own Address2 */
+  //MODIFY_REG(I2C1->OAR2, (I2C_OAR2_ENDUAL | I2C_OAR2_ADD2), (I2C_DUALADDRESS_DISABLE | 0));
+	I2C1->OAR2|=(I2C_DUALADDRESS_DISABLE | 0) << (I2C_OAR2_ENDUAL_Pos | I2C_OAR2_ADD2_Pos);
+	
+	hi2c1.ErrorCode = HAL_I2C_ERROR_NONE;
+  hi2c1.State = HAL_I2C_STATE_READY;
+  hi2c1.PreviousState = I2C_STATE_NONE;
+  hi2c1.Mode = HAL_I2C_MODE_NONE;
+
+I2C1->CR1 |= 1<<I2C_CR1_PE_Pos;
+
+
+    /* I2C1 interrupt Init */
+    HAL_NVIC_SetPriority(I2C1_EV_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
+    HAL_NVIC_SetPriority(I2C1_ER_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
+
+}
+
 void SystemClock_Config(void)
 {
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
-//вариант 1
-//  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-//  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-//  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-//  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
-//  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
-
-  /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
-  {
-    Error_Handler();
-  }
+    RCC->CFGR=0;
+    RCC->CFGR |= 16 << RCC_CFGR_PPRE1_Pos;
+    RCC->CFGR |= 13 << RCC_CFGR_PPRE2_Pos;
+    SysTick_Config(SystemCoreClock / (1000U / TICK_FREQ_1KHZ));
 
 }
 
 
 void Error_Handler(void)
 {
-  /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
-  {
-  }
-  /* USER CODE END Error_Handler_Debug */
+    __disable_irq();
+    while (1)
+    {
+    }
 }
 
-#ifdef  USE_FULL_ASSERT
-/**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
-void assert_failed(uint8_t *file, uint32_t line)
-{
-  /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-  /* USER CODE END 6 */
-}
-#endif /* USE_FULL_ASSERT */
-
-
-
-
-//Основные функции HAL для работы с I2C:
-//HAL_I2C_Master_Transmit(): передача данных от мастера к слейву. Эта функция используется для отправки данных от микроконтроллера (мастера) к периферийному устройству (слейву).
-//HAL_I2C_Master_Receive(): прием данных от слейва к мастеру. Эта функция позволяет микроконтроллеру (мастеру) получать данные от периферийного устройства (слейва).
-//HAL_I2C_Slave_Transmit(): передача данных от слейва к мастеру. Эта функция используется, когда микроконтроллер работает в режиме слейва и отправляет данные мастеру.
-//HAL_I2C_Slave_Receive(): прием данных от мастера к слейву. Эта функция позволяет микроконтроллеру в режиме слейва получать данные от мастера.

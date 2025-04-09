@@ -852,13 +852,13 @@ if (((RCC_ClkInitStruct->ClockType) & RCC_CLOCKTYPE_HCLK) == RCC_CLOCKTYPE_HCLK)
     if (((RCC_ClkInitStruct->ClockType) & RCC_CLOCKTYPE_PCLK1) == RCC_CLOCKTYPE_PCLK1)
     {
       //MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE1, RCC_HCLK_DIV16);///--
-			RCC->CFGR |= 16 << RCC_CFGR_PPRE1_Pos;
+			//RCC->CFGR |= 16 << RCC_CFGR_PPRE1_Pos;
     }
 
     if (((RCC_ClkInitStruct->ClockType) & RCC_CLOCKTYPE_PCLK2) == RCC_CLOCKTYPE_PCLK2)
     {
       //MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE2, (RCC_HCLK_DIV16 << 3));///---
-			RCC->CFGR |= 13 << RCC_CFGR_PPRE2_Pos;
+			//RCC->CFGR |= 13 << RCC_CFGR_PPRE2_Pos;
     }
 
     /* Set the new HCLK clock divider */
@@ -898,7 +898,7 @@ if (((RCC_ClkInitStruct->ClockType) & RCC_CLOCKTYPE_HCLK) == RCC_CLOCKTYPE_HCLK)
         return HAL_ERROR;
       }
     }
-    __HAL_RCC_SYSCLK_CONFIG(RCC_ClkInitStruct->SYSCLKSource);///---
+    //__HAL_RCC_SYSCLK_CONFIG(RCC_ClkInitStruct->SYSCLKSource);///---
 
     /* Get Start Tick */
     //tickstart = HAL_GetTick();///---
@@ -943,7 +943,7 @@ if (((RCC_ClkInitStruct->ClockType) & RCC_CLOCKTYPE_PCLK1) == RCC_CLOCKTYPE_PCLK
   }
 
   /* Update the SystemCoreClock global variable */
-  SystemCoreClock = HAL_RCC_GetSysClockFreq() >> AHBPrescTable[(RCC->CFGR & RCC_CFGR_HPRE) >> RCC_CFGR_HPRE_Pos];///---
+//  SystemCoreClock = HAL_RCC_GetSysClockFreq() >> AHBPrescTable[(RCC->CFGR & RCC_CFGR_HPRE) >> RCC_CFGR_HPRE_Pos];///---
 
   /* Configure the source of time base considering new system clocks settings*/
   HAL_InitTick(uwTickPrio);///---
