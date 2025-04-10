@@ -3,6 +3,30 @@
 #include "i2c.h"
 #include "gpio.h"
 
+#define MAX_DELAY      0xFFFFFFFFU
+#define I2C_GET_FLAG(__HANDLE__, __FLAG__) ((((uint8_t)((__FLAG__) >> 16U)) == 0x01U) ? \
+                                                  (((((__HANDLE__)->SR1) & ((__FLAG__) & I2C_FLAG_MASK)) == ((__FLAG__) & I2C_FLAG_MASK)) ? SET : RESET) : \
+                                                  (((((__HANDLE__)->SR2) & ((__FLAG__) & I2C_FLAG_MASK)) == ((__FLAG__) & I2C_FLAG_MASK)) ? SET : RESET))
+
+
+#define I2C_CLEAR_STOPFLAG(__HANDLE__)           \
+  do{                                                  \
+    __IO uint32_t tmpreg = 0x00U;                      \
+    tmpreg = (__HANDLE__)->SR1;              \
+    SET_BIT((__HANDLE__)->CR1, I2C_CR1_PE);  \
+    UNUSED(tmpreg);                                    \
+  } while(0)
+
+
+#define I2C_CLEAR_ADDRFLAG(__HANDLE__)    \
+  do{                                           \
+    __IO uint32_t tmpreg = 0x00U;               \
+    tmpreg = (__HANDLE__)->SR1;       \
+    tmpreg = (__HANDLE__)->SR2;       \
+    UNUSED(tmpreg);                             \
+  } while(0)
+
+
 
 #define TICK_FREQ_1KHZ 1U
 #define SLAVE_ADDR  0x68
@@ -20,38 +44,74 @@ uint8_t receivedData[2];
 
 void SystemClock_Config(void);
 
-
-uint8_t BufferCmp(uint8_t* pBuff1, uint8_t* pBuff2, uint16_t len)
+//
+int I2C_WaitOnFlagUntilTimeout1( uint32_t Flag)
 {
-    while (len--)
-    {
-        if((*pBuff1) != *pBuff2)
-        {
-            return 1;
-        }
-        pBuff1++;
-        pBuff2++;
-    }
-    return 0;
+  /* Wait until flag is set */
+  while (I2C_GET_FLAG(I2C1, Flag) == 0)
+  {
+
+  }
+  return 0;
 }
 
-void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *I2cHandle)
+//
+int I2C_WaitOnRXNEFlagUntilTimeout1()
 {
-    HAL_Delay(10);
+
+  while (I2C_GET_FLAG(I2C1, I2C_FLAG_RXNE) == 0)
+  {
+
+  }
+  return 0;
 }
 
-void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *I2cHandle)
-{
-    HAL_Delay(10);
 
-    if(BufferCmp(dataToSend, receivedData, 2))
+/////////////////
+int I2C_Slave_Receive(uint8_t *pData, uint16_t Size)
+{
+
+    /* Disable Pos */
+		I2C1->CR1 |=0 << I2C_CR1_POS_Pos;
+
+		I2C1->CR1 |=1 << I2C_CR1_ACK_Pos;
+		
+    /* Wait until ADDR flag is set */
+    if (I2C_WaitOnFlagUntilTimeout1(I2C_FLAG_ADDR) != 0)
     {
-        HAL_Delay(10);
+      return 1;
     }
-    else
+
+    /* Clear ADDR flag */
+    I2C_CLEAR_ADDRFLAG(I2C1);
+
+    while (Size > 0)
     {
-        HAL_Delay(10);
+      /* Wait until RXNE flag is set */
+      if (I2C_WaitOnRXNEFlagUntilTimeout1() != 0)
+      {
+        /* Disable Address Acknowledge */
+				I2C1->CR1 |=0 << I2C_CR1_ACK_Pos;
+        return 1;
+      }
+
+      /* Read data from DR */
+      *pData = (uint8_t)I2C1->DR;
+
+      /* Increment Buffer pointer */
+      pData++;
+
+      /* Update counter */
+      Size--;
     }
+
+    /* Clear STOP flag */
+    I2C_CLEAR_STOPFLAG(I2C1);
+
+    /* Disable Address Acknowledge */
+		I2C1->CR1 |=0 << I2C_CR1_ACK_Pos;
+		
+		return 0;
 }
 
 
@@ -62,11 +122,12 @@ int main(void)
 
     MX_GPIO_Init();
     MX_I2C1_Init();
-
+		
     while (1)
     {
-
-        while(HAL_I2C_Slave_Receive(&hi2c1, receivedData, 2, HAL_MAX_DELAY)!= HAL_OK)
+		
+					
+        while(I2C_Slave_Receive(receivedData, 2)!= 0)
         {
             Error_Handler();
         }
@@ -74,13 +135,15 @@ int main(void)
         while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY)
         {};
         //
-        if(HAL_I2C_Slave_Transmit(&hi2c1, dataToSend, 2, HAL_MAX_DELAY)
+        if(HAL_I2C_Slave_Transmit(&hi2c1, dataToSend, 2, MAX_DELAY)
                 != HAL_OK)
         {
             Error_Handler();
         }
 
-        HAL_Delay(100);
+        //HAL_Delay(100);
+				for (int i=0; i<1000;i++)
+				{};
     }
 
 }
@@ -93,7 +156,7 @@ void MX_GPIO_Init(void)
 		
 		GPIO_InitTypeDef GPIO_InitStruct = {0};
 		
-		GPIO_InitStruct.Pin   = GPIO_PIN_6 | GPIO_PIN_7;
+	GPIO_InitStruct.Pin   = GPIO_PIN_6 | GPIO_PIN_7;
 	GPIO_InitStruct.Mode  = GPIO_MODE_AF_OD;
 	GPIO_InitStruct.Pull  = GPIO_PULLUP;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
