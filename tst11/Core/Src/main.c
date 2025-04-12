@@ -4,10 +4,6 @@
 #include "gpio.h"
 
 #define MAX_DELAY      0xFFFFFFFFU
-#define I2C_GET_FLAG(__HANDLE__, __FLAG__) ((((uint8_t)((__FLAG__) >> 16U)) == 0x01U) ? \
-                                                  (((((__HANDLE__)->SR1) & ((__FLAG__) & I2C_FLAG_MASK)) == ((__FLAG__) & I2C_FLAG_MASK)) ? SET : RESET) : \
-                                                  (((((__HANDLE__)->SR2) & ((__FLAG__) & I2C_FLAG_MASK)) == ((__FLAG__) & I2C_FLAG_MASK)) ? SET : RESET))
-
 
 #define I2C_CLEAR_STOPFLAG(__HANDLE__)           \
   do{                                                  \
@@ -30,7 +26,10 @@
 
 #define TICK_FREQ_1KHZ 1U
 #define SLAVE_ADDR  0x68
-I2C_HandleTypeDef hi2c1;
+	
+void MX_I2C1_Init1(void);
+void MX_GPIO_Init1(void);	
+//I2C_HandleTypeDef hi2c1;
 
 uint8_t dataToSend[2] = {0xAA, 0xAF}; // Пример данных для отправки
 uint8_t receivedData[2];
@@ -45,23 +44,30 @@ uint8_t receivedData[2];
 void SystemClock_Config(void);
 
 //
-int I2C_WaitOnFlagUntilTimeout1( uint32_t Flag)
+int I2C_AdresSetTime()
 {
-  /* Wait until flag is set */
-  while (I2C_GET_FLAG(I2C1, Flag) == 0)
+  //ждем адрес
+  while (!(I2C1->SR1 & I2C_SR1_ADDR))
   {
-
   }
   return 0;
 }
 
 //
-int I2C_WaitOnRXNEFlagUntilTimeout1()
+int I2C_RX_SetTime()
 {
-
-  while (I2C_GET_FLAG(I2C1, I2C_FLAG_RXNE) == 0)
+	//ждем прием данных
+  while (!(I2C1->SR1 & I2C_SR1_RXNE) )
   {
+  }
+  return 0;
+}
 
+int I2C_TX_SetTime()
+{
+	//ждем передачу данных
+  while (!(I2C1->SR1 & I2C_SR1_TXE) )
+  {
   }
   return 0;
 }
@@ -71,84 +77,119 @@ int I2C_WaitOnRXNEFlagUntilTimeout1()
 int I2C_Slave_Receive(uint8_t *pData, uint16_t Size)
 {
 
-    /* Disable Pos */
+	//откл POS
 		I2C1->CR1 |=0 << I2C_CR1_POS_Pos;
-
+	//вкл проверку адреса
 		I2C1->CR1 |=1 << I2C_CR1_ACK_Pos;
 		
-    /* Wait until ADDR flag is set */
-    if (I2C_WaitOnFlagUntilTimeout1(I2C_FLAG_ADDR) != 0)
+  //проверим адрес
+	if (I2C_AdresSetTime() != 0)
     {
       return 1;
     }
-
-    /* Clear ADDR flag */
-    I2C_CLEAR_ADDRFLAG(I2C1);
-
-    while (Size > 0)
+		
+	//сброс флага адреса
+		I2C1->SR2;	
+		
+		while (Size > 0)//крутим
     {
-      /* Wait until RXNE flag is set */
-      if (I2C_WaitOnRXNEFlagUntilTimeout1() != 0)
+      //проверим данные
+      if (I2C_RX_SetTime() != 0)
       {
-        /* Disable Address Acknowledge */
+        //откл проверку адреса
 				I2C1->CR1 |=0 << I2C_CR1_ACK_Pos;
         return 1;
       }
 
-      /* Read data from DR */
+      //читаем данные
       *pData = (uint8_t)I2C1->DR;
-
-      /* Increment Buffer pointer */
       pData++;
-
-      /* Update counter */
       Size--;
     }
 
-    /* Clear STOP flag */
-    I2C_CLEAR_STOPFLAG(I2C1);
-
-    /* Disable Address Acknowledge */
+		//сброс флага
+		I2C1->SR1;
+		
+    //откл проверку адреса
 		I2C1->CR1 |=0 << I2C_CR1_ACK_Pos;
 		
 		return 0;
 }
+////////////////////
+int I2C_Slave_Transmit(uint8_t *pData, uint16_t Size)
+{
+  /* Init tickstart for timeout management*/
+  uint32_t tickstart = HAL_GetTick();
+	
+	//откл POS
+		I2C1->CR1 |=0 << I2C_CR1_POS_Pos;
+	//вкл проверку адреса
+		I2C1->CR1 |=1 << I2C_CR1_ACK_Pos;
 
+  //проверим адрес
+	if (I2C_AdresSetTime() != 0)
+    {
+      return 1;
+    }
+		
+	//сброс флага адреса
+		I2C1->SR2;
+
+    while (Size > 0U)//крутим
+    {
+      //проверим данные
+      if (I2C_TX_SetTime() != 0)
+      {
+        //откл проверку адреса
+				I2C1->CR1 |=0 << I2C_CR1_ACK_Pos;
+        return 1;
+      }
+
+      //запишем данные
+      I2C1->DR = *pData;
+      pData++;
+      Size--;
+    }
+
+		//сброс флага
+		I2C1->SR1;
+
+    //откл проверку адреса
+		I2C1->CR1 |=0 << I2C_CR1_ACK_Pos;
+
+    return 0;
+}
 
 
 int main(void)
 {
     SystemClock_Config();
 
-    MX_GPIO_Init();
-    MX_I2C1_Init();
+    MX_GPIO_Init1();
+    MX_I2C1_Init1();
 		
     while (1)
     {
-		
-					
         while(I2C_Slave_Receive(receivedData, 2)!= 0)
         {
             Error_Handler();
         }
-        //
-        while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY)
-        {};
-        //
-        if(HAL_I2C_Slave_Transmit(&hi2c1, dataToSend, 2, MAX_DELAY)
-                != HAL_OK)
+
+				for (int i=0; i<1000;i++)
+				{};
+					
+        if(I2C_Slave_Transmit(dataToSend, 2)!= 0)
         {
             Error_Handler();
         }
 
-        //HAL_Delay(100);
 				for (int i=0; i<1000;i++)
 				{};
     }
 
 }
 
-void MX_GPIO_Init(void)
+void MX_GPIO_Init1(void)
 {
 		RCC->APB2ENR |=1 << RCC_APB2ENR_IOPDEN_Pos;
 		RCC->APB2ENR |=1 << RCC_APB2ENR_IOPAEN_Pos;
@@ -177,14 +218,14 @@ void MX_GPIO_Init(void)
 #define I2C_STATE_NONE            ((uint32_t)(HAL_I2C_MODE_NONE)) 
 
 
-void MX_I2C1_Init(void)
+void MX_I2C1_Init1(void)
 {
 	RCC->APB1ENR|=1 << RCC_APB1ENR_I2C1EN_Pos;
 
 
 I2C1->CR1 = 0;
 
-	hi2c1.Instance             = I2C1;
+//	hi2c1.Instance             = I2C1;
 //	hi2c1.Init.ClockSpeed      = 100000;
 	//hi2c1.Init.DutyCycle       = I2C_DUTYCYCLE_2;
 //	hi2c1.Init.OwnAddress1     = SLAVE_ADDR;
@@ -231,10 +272,10 @@ I2C1->CR1 = 0;
   //MODIFY_REG(I2C1->OAR2, (I2C_OAR2_ENDUAL | I2C_OAR2_ADD2), (I2C_DUALADDRESS_DISABLE | 0));
 	I2C1->OAR2|=(I2C_DUALADDRESS_DISABLE | 0) << (I2C_OAR2_ENDUAL_Pos | I2C_OAR2_ADD2_Pos);
 	
-	hi2c1.ErrorCode = HAL_I2C_ERROR_NONE;
-  hi2c1.State = HAL_I2C_STATE_READY;
-  hi2c1.PreviousState = I2C_STATE_NONE;
-  hi2c1.Mode = HAL_I2C_MODE_NONE;
+//	hi2c1.ErrorCode = HAL_I2C_ERROR_NONE;
+//  hi2c1.State = HAL_I2C_STATE_READY;
+//  hi2c1.PreviousState = I2C_STATE_NONE;
+//  hi2c1.Mode = HAL_I2C_MODE_NONE;
 
 I2C1->CR1 |= 1<<I2C_CR1_PE_Pos;
 
