@@ -1,32 +1,237 @@
-/* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
-/* USER CODE END Header */
-/* Includes ------------------------------------------------------------------*/
+
 #include "main.h"
 #include "i2c.h"
 #include "gpio.h"
 
+#define I2C_STATE_NONE            ((uint32_t)(HAL_I2C_MODE_NONE)) 
+#define I2C_TIMEOUT_BUSY_FLAG     25U         /*!< Timeout 25 ms             */
+#define I2C_STATE_MSK             ((uint32_t)((uint32_t)((uint32_t)HAL_I2C_STATE_BUSY_TX | (uint32_t)HAL_I2C_STATE_BUSY_RX) & (uint32_t)(~((uint32_t)HAL_I2C_STATE_READY)))) 
+#define I2C_STATE_MASTER_BUSY_RX  ((uint32_t)(((uint32_t)HAL_I2C_STATE_BUSY_RX & I2C_STATE_MSK) | (uint32_t)HAL_I2C_MODE_MASTER))
+#define I2C_NO_OPTION_FRAME       0xFFFF0000U /*!< XferOptions default value */
 
 #define I2C_ADDRESS 0x68  // Адрес I2C устройства
 uint8_t dataToSend[2] = {0x68, 0xf7}; 
 uint8_t receivedData[2];
 
 void SystemClock_Config(void);
+
+
+#define I2C_7BIT_ADD_WRITE(__ADDRESS__)                    ((uint8_t)((__ADDRESS__) & (uint8_t)(~I2C_OAR1_ADD0)))
+
+
+int I2C_AdresSetTime()
+{
+  //ждем адрес
+  while (!(I2C1->SR1 & I2C_SR1_ADDR))
+  {
+  }
+  return 0;
+}
+
+int I2C_TX_SetTime()
+{
+	//ждем передачу данных
+  while (!(I2C1->SR1 & I2C_SR1_TXE) )
+  {
+  }
+  return 0;
+}
+
+
+int I2C_StartBit_SetTime()
+{
+	//ждем передачу данных
+  while (!(I2C1->SR1 & I2C_SR1_SB) )
+  {
+  }
+  return 0;
+}
+
+
+int I2C_MasterRequestRead(uint16_t DevAddress)
+{
+
+	I2C1->CR1 |=1 << I2C_CR1_ACK_Pos;
+
+	I2C1->CR1 |=1 << I2C_CR1_START_Pos;
+
+	I2C_StartBit_SetTime();
+	
+	I2C1->DR =I2C_7BIT_ADD_READ(DevAddress);
+
+	I2C_AdresSetTime();
+  return 0;
+}
+
+
+int I2C_RX_SetTime()
+{
+	//ждем прием данных
+  while (!(I2C1->SR1 & I2C_SR1_RXNE) )
+  {
+  }
+  return 0;
+}
+
+int I2C_MasterRequestWriteT(uint16_t DevAddress)
+{
+
+	I2C1->CR1 |=1 << I2C_CR1_START_Pos;
+	
+	I2C_StartBit_SetTime();
+
+	I2C1->DR =I2C_7BIT_ADD_WRITE(DevAddress);
+
+	I2C_AdresSetTime();
+
+  return 0;
+}
+
+///////////////
+HAL_StatusTypeDef HAL_I2C_Master_ReceiveT(uint16_t DevAddress, uint8_t *pData, uint16_t Size)
+{
+  /* Init tickstart for timeout management*/
+  //uint32_t tickstart = HAL_GetTick();
+
+		I2C1->CR1 |= 1 << I2C_CR1_PE_Pos;
+		
+		    /* Disable Pos */
+		I2C1->CR1 |= 0 << I2C_CR1_POS_Pos;
+		
+    /* Send Slave Address */
+    if (I2C_MasterRequestRead(DevAddress) != 0)
+    {
+      return 1;
+    }
+
+    if (Size == 0U)
+    {
+			I2C1->SR2;
+			
+			/* Generate Stop */
+			I2C1->CR1 |=1 << I2C_CR1_STOP_Pos;
+    }
+    else if (Size == 1U)
+    {
+      //откл проверку адреса
+			I2C1->CR1 &= ~(1 << I2C_CR1_ACK_Pos);
+
+			//сброс флага адреса
+			I2C1->SR2;
+
+			/* Generate Stop */
+			I2C1->CR1 |=1 << I2C_CR1_STOP_Pos;
+    }
+    else if (Size == 2U)
+    {
+      //откл проверку адреса
+			I2C1->CR1 &= ~(1 << I2C_CR1_ACK_Pos);
+
+			//откл проверку адреса
+			I2C1->CR1 |=0 << I2C_CR1_ACK_Pos;
+			
+      /* Enable Pos */
+			I2C1->CR1 |=1 << I2C_CR1_POS_Pos;
+
+			//сброс флага адреса
+			I2C1->SR2;
+    }
+    else
+    {
+			//вкл проверку адреса
+			I2C1->CR1 |=1 << I2C_CR1_ACK_Pos;
+
+			//сброс флага адреса
+			I2C1->SR2;
+    }
+
+    while (Size > 0U)
+    {
+      if (Size <= 3U)
+      {
+
+        if (Size == 2U)
+        {
+		
+					/* Generate Stop */
+					I2C1->CR1 |=1 << I2C_CR1_STOP_Pos;
+		
+          /* Read data from DR */
+          *pData = (uint8_t)I2C1->DR;
+          pData++;
+          Size--;
+
+          /* Read data from DR */
+          *pData = (uint8_t)I2C1->DR;
+          pData++;
+          Size--;
+        }
+      }
+      else
+      {
+        /* Wait until RXNE flag is set */
+        if (I2C_RX_SetTime() != 0)
+        {
+          return 1;
+        }
+
+          /* Read data from DR */
+          *pData = (uint8_t)I2C1->DR;
+          pData++;
+          Size--;
+
+      }
+    }
+
+    return 0;
+}
+
+
+//////////////////////////
+int HAL_I2C_Master_TransmitT(uint16_t DevAddress, uint8_t *pData, uint16_t Size)
+{
+
+		I2C1->CR1 |= 1 << I2C_CR1_PE_Pos;
+			
+    /* Disable Pos */
+		I2C1->CR1 |= 0 << I2C_CR1_POS_Pos;
+
+    /* Send Slave Address */
+    if (I2C_MasterRequestWriteT(DevAddress) != 0)
+    {
+      return 1;
+    }
+
+			//сброс флага адреса
+		I2C1->SR2;
+		
+    while (Size > 0U)
+    {
+      /* Write data to DR */
+      I2C1->DR = *pData;
+			
+      /* Increment Buffer pointer */
+      pData++;
+      Size--;
+
+      //проверим данные
+      if (I2C_TX_SetTime() != 0)
+      {
+        //откл проверку адреса
+				I2C1->CR1 |=0 << I2C_CR1_ACK_Pos;
+        return 1;
+      }
+    }
+
+    /* Generate Stop */
+		I2C1->CR1 |=1 << I2C_CR1_STOP_Pos;
+
+    return 0;
+}
+
+
+
+///////////////////////////////
 
 int main(void)
 {
@@ -38,63 +243,38 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
 	
-	//вариант 2
-	//старт передачи
-//		while (HAL_I2C_Master_Transmit(&hi2c1, I2C_ADDRESS, dataToSend, 2, HAL_MAX_DELAY) != HAL_OK)
-//	{
-//		if (HAL_I2C_GetError(&hi2c1) != HAL_I2C_ERROR_AF)
-//		{
-//			/* Acknowledge failure occurs.
-//			 * Slave don't acknowledge its address. */
-//			Error_Handler();
-//		}
-//	}
-//	//ожидание конца передачи
-//	while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY)
-//	{};
-//	//старт приема
-//	while(HAL_I2C_Master_Receive(&hi2c1, I2C_ADDRESS, receivedData, 2, HAL_MAX_DELAY) != HAL_OK)
-//	{
-//		if (HAL_I2C_GetError(&hi2c1) != HAL_I2C_ERROR_AF)
-//		{
-//			/* Acknowledge failure occurs.
-//			 * Slave don't acknowledge its address. */
-//			Error_Handler();
-//		}
-//	}
-
-	
   while (1)
   {
 ////// Отправка данных
 	//старт передачи
-		while (HAL_I2C_Master_Transmit(&hi2c1, I2C_ADDRESS, dataToSend, 2, HAL_MAX_DELAY) != HAL_OK)
+		while (HAL_I2C_Master_TransmitT(I2C_ADDRESS, dataToSend, 2) != HAL_OK)
 	{
-		if (HAL_I2C_GetError(&hi2c1) != HAL_I2C_ERROR_AF)
-		{
-			/* Acknowledge failure occurs.
-			 * Slave don't acknowledge its address. */
 			Error_Handler();
-		}
 	}
-	//ожидание конца передачи
+//	//ожидание конца передачи
 	while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY)
 	{};
 	//старт приема
-	while(HAL_I2C_Master_Receive(&hi2c1, I2C_ADDRESS, receivedData, 2, HAL_MAX_DELAY) != HAL_OK)
+	while(HAL_I2C_Master_ReceiveT(I2C_ADDRESS, receivedData, 2) != HAL_OK)
 	{
-		if (HAL_I2C_GetError(&hi2c1) != HAL_I2C_ERROR_AF)
-		{
-			/* Acknowledge failure occurs.
-			 * Slave don't acknowledge its address. */
+//		if (HAL_I2C_GetError(&hi2c1) != HAL_I2C_ERROR_AF)
+//		{
 			Error_Handler();
-		}
+//		}
 	}
 
        HAL_Delay(1000);
+//			 for (int i=0; i<1000000;i++)
+//				{};
   }
 
 }
+
+
+
+/////////////////////////
+
+
 
 uint8_t BufferCmp(uint8_t* pBuff1, uint8_t* pBuff2, uint16_t len)
 {
@@ -133,57 +313,32 @@ void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *I2cHandle)
 
 void SystemClock_Config(void)
 {
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+//  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+//  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  __HAL_RCC_PWR_CLK_ENABLE();
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-//версия 1
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = 8;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
+//  __HAL_RCC_PWR_CLK_ENABLE();
+//  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+////версия 1
+//  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+//  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+//  RCC_OscInitStruct.HSICalibrationValue = 8;
+//  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+//  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+//  {
+//    Error_Handler();
+//  }
 
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV2;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+//  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+//                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+//  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+//  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV2;
+//  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+//  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-////версия 2
-//	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-//	RCC_OscInitStruct.HSEState       = RCC_HSE_ON;
-//	RCC_OscInitStruct.PLL.PLLState   = RCC_PLL_ON;
-//	RCC_OscInitStruct.PLL.PLLSource  = RCC_PLLSOURCE_HSE;
-//	RCC_OscInitStruct.PLL.PLLM       = 8;
-//	RCC_OscInitStruct.PLL.PLLN       = 336;
-//	RCC_OscInitStruct.PLL.PLLP       = RCC_PLLP_DIV2;
-//	RCC_OscInitStruct.PLL.PLLQ       = 7;
-//	if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-//	{
-//		Error_Handler();
-//	}
-
-//	RCC_ClkInitStruct.ClockType      = RCC_CLOCKTYPE_SYSCLK |
-//			RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
-//	RCC_ClkInitStruct.SYSCLKSource   = RCC_SYSCLKSOURCE_PLLCLK;
-//	RCC_ClkInitStruct.AHBCLKDivider  = RCC_SYSCLK_DIV1;
-//	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-//	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
-//	if(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
-//	{
-//		Error_Handler();
-//	}
+//  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+//  {
+//    Error_Handler();
+//  }
 }
 
 void Error_Handler(void)
@@ -194,50 +349,3 @@ void Error_Handler(void)
   }
 }
 
-#ifdef  USE_FULL_ASSERT
-/**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
-void assert_failed(uint8_t *file, uint32_t line)
-{
-  /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-  /* USER CODE END 6 */
-}
-#endif /* USE_FULL_ASSERT */
-
-
-
-
-//#define I2C_ADDRESS 0x68 << 1  // Адрес I2C устройства
-//    uint8_t dataToSend[2] = {0x00, 0x07}; // Пример данных для отправки
-//    uint8_t receivedData[2];
-//  while (1)
-//  {
-//      // Отправка данных
-////        if (HAL_I2C_Master_Transmit(&hi2c1, I2C_ADDRESS, dataToSend, 2, HAL_MAX_DELAY) != HAL_OK)
-////				{
-////            //printf("Error during transmission\r\n");
-////        }
-
-////        HAL_Delay(1000);
-
-//        // Чтение данных
-//        if (HAL_I2C_Master_Receive(&hi2c1, I2C_ADDRESS, receivedData, 2, HAL_MAX_DELAY) != HAL_OK) 
-//				{
-//            //printf("Error during reception\r\n");
-//						HAL_Delay(1);
-//        } 
-//				else 
-//				{
-//            //printf("Received Data: 0x%02X 0x%02X\r\n", receivedData[0], receivedData[1]);
-//						HAL_Delay(1);
-//        }
-
-//        HAL_Delay(1000);
-//  }

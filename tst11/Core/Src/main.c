@@ -27,8 +27,8 @@
 #define TICK_FREQ_1KHZ 1U
 #define SLAVE_ADDR  0x68
 	
-void MX_I2C1_Init1(void);
-void MX_GPIO_Init1(void);	
+//void MX_I2C1_Init(void);
+//void MX_GPIO_Init(void);	
 //I2C_HandleTypeDef hi2c1;
 
 uint8_t dataToSend[2] = {0xAA, 0xAF}; // Пример данных для отправки
@@ -118,8 +118,8 @@ int I2C_Slave_Receive(uint8_t *pData, uint16_t Size)
 ////////////////////
 int I2C_Slave_Transmit(uint8_t *pData, uint16_t Size)
 {
-  /* Init tickstart for timeout management*/
-  uint32_t tickstart = HAL_GetTick();
+//  /* Init tickstart for timeout management*/
+//  uint32_t tickstart = HAL_GetTick();
 	
 	//откл POS
 		I2C1->CR1 |=0 << I2C_CR1_POS_Pos;
@@ -165,8 +165,8 @@ int main(void)
 {
     SystemClock_Config();
 
-    MX_GPIO_Init1();
-    MX_I2C1_Init1();
+    MX_GPIO_Init();
+    MX_I2C1_Init();
 		
     while (1)
     {
@@ -189,19 +189,27 @@ int main(void)
 
 }
 
-void MX_GPIO_Init1(void)
+void MX_GPIO_Init(void)
 {
 		RCC->APB2ENR |=1 << RCC_APB2ENR_IOPDEN_Pos;
 		RCC->APB2ENR |=1 << RCC_APB2ENR_IOPAEN_Pos;
 		RCC->APB2ENR |=1 << RCC_APB2ENR_IOPBEN_Pos;
 		
-		GPIO_InitTypeDef GPIO_InitStruct = {0};
+//		GPIO_InitTypeDef GPIO_InitStruct = {0};
+//		
+//	GPIO_InitStruct.Pin   = GPIO_PIN_6 | GPIO_PIN_7;
+//	GPIO_InitStruct.Mode  = GPIO_MODE_AF_OD;
+//	GPIO_InitStruct.Pull  = GPIO_PULLUP;
+//	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+//	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);	
+	
+			GPIOB->CRL &= ~(GPIO_CRL_MODE6 | GPIO_CRL_CNF6);//reset
+    GPIOB->CRL |= GPIO_CRL_MODE6; // PB6
+		GPIOB->CRL |= (GPIO_CRL_CNF6_0 | GPIO_CRL_CNF6_1); // PB6 alt
 		
-	GPIO_InitStruct.Pin   = GPIO_PIN_6 | GPIO_PIN_7;
-	GPIO_InitStruct.Mode  = GPIO_MODE_AF_OD;
-	GPIO_InitStruct.Pull  = GPIO_PULLUP;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);	
+		GPIOB->CRL &= ~(GPIO_CRL_MODE7 | GPIO_CRL_CNF7);//reset
+		GPIOB->CRL |= GPIO_CRL_MODE7; // PB7
+		GPIOB->CRL |= (GPIO_CRL_CNF7_0 | GPIO_CRL_CNF7_1); // PB7 alt
 
 }
 
@@ -218,7 +226,7 @@ void MX_GPIO_Init1(void)
 #define I2C_STATE_NONE            ((uint32_t)(HAL_I2C_MODE_NONE)) 
 
 
-void MX_I2C1_Init1(void)
+void MX_I2C1_Init(void)
 {
 	RCC->APB1ENR|=1 << RCC_APB1ENR_I2C1EN_Pos;
 
@@ -239,11 +247,12 @@ I2C1->CR1 = 0;
 //	}
 	
   /* Get PCLK1 frequency */
-  pclk1 = HAL_RCC_GetPCLK1Freq();
-
+  //pclk1 = HAL_RCC_GetPCLK1Freq();
+	pclk1 = 0x00F42400;
   /* Calculate frequency range */
-  freqrange = I2C_FREQRANGE(pclk1);
-
+  //freqrange = I2C_FREQRANGE(pclk1);
+	freqrange = I2C_CR2_FREQ_1;
+	I2C_DUTYCYCLE_16_9;
   /*---------------------------- I2Cx CR2 Configuration ----------------------*/
   /* Configure I2Cx: Frequency range */
   //MODIFY_REG(I2C1->CR2, I2C_CR2_FREQ, freqrange);
@@ -265,13 +274,14 @@ I2C1->CR1 = 0;
   //MODIFY_REG(I2C1->OAR1, (I2C_OAR1_ADDMODE | I2C_OAR1_ADD0), (I2C_ADDRESSINGMODE_7BIT | SLAVE_ADDR));
 	//MODIFY_REG(I2C1->OAR1, (I2C_OAR1_ADD1_7), (SLAVE_ADDR));
 	I2C1->OAR1 =SLAVE_ADDR;
-	I2C1->OAR1|=(I2C_ADDRESSINGMODE_7BIT) << (I2C_OAR1_ADDMODE_Pos);
+	//I2C1->OAR1|=(I2C_ADDRESSINGMODE_7BIT) << (I2C_OAR1_ADDMODE_Pos);
+	I2C1->OAR1 &=~I2C_OAR1_ADDMODE;
 	//I2C1->OAR1|=(I2C_ADDRESSINGMODE_7BIT | SLAVE_ADDR) << (I2C_OAR1_ADD8_9 | I2C_OAR1_ADD1_7);
   /*---------------------------- I2Cx OAR2 Configuration ---------------------*/
   /* Configure I2Cx: Dual mode and Own Address2 */
   //MODIFY_REG(I2C1->OAR2, (I2C_OAR2_ENDUAL | I2C_OAR2_ADD2), (I2C_DUALADDRESS_DISABLE | 0));
-	I2C1->OAR2|=(I2C_DUALADDRESS_DISABLE | 0) << (I2C_OAR2_ENDUAL_Pos | I2C_OAR2_ADD2_Pos);
-	
+	//I2C1->OAR2|=(I2C_DUALADDRESS_DISABLE | 0) << (I2C_OAR2_ENDUAL_Pos | I2C_OAR2_ADD2_Pos);
+	I2C1->OAR2&=~I2C_OAR2_ENDUAL;
 //	hi2c1.ErrorCode = HAL_I2C_ERROR_NONE;
 //  hi2c1.State = HAL_I2C_STATE_READY;
 //  hi2c1.PreviousState = I2C_STATE_NONE;
@@ -291,10 +301,10 @@ I2C1->CR1 |= 1<<I2C_CR1_PE_Pos;
 void SystemClock_Config(void)
 {
 
-    RCC->CFGR=0;
-    RCC->CFGR |= 16 << RCC_CFGR_PPRE1_Pos;
-    RCC->CFGR |= 13 << RCC_CFGR_PPRE2_Pos;
-    SysTick_Config(SystemCoreClock / (1000U / TICK_FREQ_1KHZ));
+//    RCC->CFGR=0;
+//    RCC->CFGR |= 16 << RCC_CFGR_PPRE1_Pos;
+//    RCC->CFGR |= 13 << RCC_CFGR_PPRE2_Pos;
+//    SysTick_Config(SystemCoreClock / (1000U / TICK_FREQ_1KHZ));
 
 }
 

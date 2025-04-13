@@ -1,90 +1,146 @@
 #include "app.h"
 
-uint8_t* count_device;
+uint8_t dataToSend[2] = {0xAA, 0xAF}; // Пример данных для отправки
+uint8_t receivedData[2];
 
-void I2C1_EV_IRQHandler(void)
+
+int I2C_AdresSetTime()
 {
-    if (I2C1->SR1 & I2C_SR1_ADDR)
-		{ // Проверка адреса
-        (void)I2C1->SR2; // Сброс флага
-    }
-
-    if (I2C1->SR1 & I2C_SR1_RXNE) 
-		{ // Если данные приняты
-        uint8_t received_data = I2C1->DR; // Чтение данных
-        // Обработка received_data
-    }
-
-    if (I2C1->SR1 & I2C_SR1_TXE) 
-		{ // Если готовы отправить данные
-        //I2C1->DR = /* данные для отправки */
-    }
+  //ждем адрес
+  while (!(I2C1->SR1 & I2C_SR1_ADDR))
+  {
+  }
+  return 0;
 }
 
-void I2C_Slave_Receive() 
+int I2C_RX_SetTime()
 {
-uint8_t data;
-    //while (!(I2C1->SR1 & I2C_SR1_ADDR)); // Ожидание адреса
-    //(void)I2C1->SR2; // Сброс флага адреса
-		if (I2C1->SR1 & I2C_SR1_ADDR)
-		{ // Проверка адреса
-        (void)I2C1->SR2; // Сброс флага
-    }
-
-    //while (!(I2C1->SR1 & I2C_SR1_RXNE)); // Ожидание поступления данных
-    //uint8_t data = I2C1->DR; // Чтение данных
-		if (I2C1->SR1 & I2C_SR1_RXNE) 
-		{ // Если данные приняты
-        data = I2C1->DR; // Чтение данных
-        // Обработка received_data
-    }
-		
-    // Обработка полученных данных (например, сохранение в буфер)
-		if (I2C1->SR1 & I2C_SR1_TXE) 
-		{ // Если готовы отправить данные
-        I2C1->DR = 0xAF;
-    }
+	//ждем прием данных
+  while (!(I2C1->SR1 & I2C_SR1_RXNE) )
+  {
+  }
+  return 0;
 }
 
-uint8_t* I2C_Scan_Bus(uint8_t count)
+int I2C_TX_SetTime()
 {
-		uint8_t* count_device;
+	//ждем передачу данных
+  while (!(I2C1->SR1 & I2C_SR1_TXE) )
+  {
+  }
+  return 0;
+}
+
+int I2C_Slave_Receive(uint8_t *pData, uint16_t Size)
+{
+	//откл POS
+		I2C1->CR1 &=~I2C_CR1_POS;
+	//вкл проверку адреса
+		I2C1->CR1 |=I2C_CR1_ACK;
 		
-		if(count <=0)
-		{
-				count=128;
-		};
+  //проверим адрес
+	if (I2C_AdresSetTime() != 0)
+    {
+      return 1;
+    }
 		
-		for (uint8_t i=0; i < count; i++)
-		{
-						I2C1->CR1 |= I2C_CR1_ACK;
-						I2C1->CR1 |= I2C_CR1_START; // Генерация стартового состояния
-						while(!(I2C1->SR1 & I2C_SR1_SB)); // Ожидание завершения
-			
-				I2C1->DR=(i<<1|0); 
-        while(!(I2C1->SR1)|!(I2C1->SR2))
-				{};
-					
-				    I2C1->CR1 |=I2C_CR1_STOP; // Генерация стоп-состояния
-						while (I2C1->CR1 & I2C_SR1_STOPF); // Ожидание завершения
-						
-				*count_device++ =(I2C1->SR1&I2C_SR1_ADDR);
-		};
+	//сброс флага адреса
+		I2C1->SR2;	
 		
-		return count_device;
+		while (Size > 0)//крутим
+    {
+      //проверим данные
+      if (I2C_RX_SetTime() != 0)
+      {
+        //откл проверку адреса
+				I2C1->CR1 &=~I2C_CR1_ACK;
+        return 1;
+      }
+
+      //читаем данные
+      *pData = (uint8_t)I2C1->DR;
+      pData++;
+      Size--;
+    }
+
+		//сброс флага
+		I2C1->SR1;
+		
+    //откл проверку адреса
+		I2C1->CR1 &=~I2C_CR1_ACK;
+		
+		return 0;
+}
+////////////////////
+int I2C_Slave_Transmit(uint8_t *pData, uint16_t Size)
+{
+	//откл POS
+		I2C1->CR1 &=~I2C_CR1_POS;
+	//вкл проверку адреса
+		I2C1->CR1 |=I2C_CR1_ACK;
+
+  //проверим адрес
+	if (I2C_AdresSetTime() != 0)
+    {
+      return 1;
+    }
+		
+	//сброс флага адреса
+		I2C1->SR2;
+
+    while (Size > 0U)//крутим
+    {
+      //проверим данные
+      if (I2C_TX_SetTime() != 0)
+      {
+        //откл проверку адреса
+				I2C1->CR1 &=~I2C_CR1_ACK;
+        return 1;
+      }
+
+      //запишем данные
+      I2C1->DR = *pData;
+      pData++;
+      Size--;
+    }
+
+		//сброс флага
+		I2C1->SR1;
+
+    //откл проверку адреса
+		I2C1->CR1 &=~I2C_CR1_ACK;
+
+    return 0;
+}
+
+void Error_Handler(void)
+{
+    __disable_irq();
+    while (1)
+    {
+    }
 }
 
 int main()
 {
 	Init_LED();
 	Init_I2C();
-	NVIC_EnableIRQ(I2C1_EV_IRQn);
 	
 	while(1)
 	{
-			//count_device=I2C_Scan_Bus(128);
-			I2C_Slave_Receive(); // Получение данныхI2C_Slave_Receive(); // Получение данных
-			delay_ms(100);
+        while(I2C_Slave_Receive(receivedData, 2)!= 0)
+        {
+            Error_Handler();
+        }
+
+				delay_us(100);
+					
+        if(I2C_Slave_Transmit(dataToSend, 2)!= 0)
+        {
+            Error_Handler();
+        }
+				
+				delay_us(100);	
 	}
 	return 0;
 }
