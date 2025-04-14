@@ -9,6 +9,12 @@
 #define I2C_STATE_MASTER_BUSY_RX  ((uint32_t)(((uint32_t)HAL_I2C_STATE_BUSY_RX & I2C_STATE_MSK) | (uint32_t)HAL_I2C_MODE_MASTER))
 #define I2C_NO_OPTION_FRAME       0xFFFF0000U /*!< XferOptions default value */
 
+#define __HAL_I2C_GET_FLAG(__HANDLE__, __FLAG__) ((((uint8_t)((__FLAG__) >> 16U)) == 0x01U) ? \
+                                                  (((((__HANDLE__)->Instance->SR1) & ((__FLAG__) & I2C_FLAG_MASK)) == ((__FLAG__) & I2C_FLAG_MASK)) ? SET : RESET) : \
+                                                  (((((__HANDLE__)->Instance->SR2) & ((__FLAG__) & I2C_FLAG_MASK)) == ((__FLAG__) & I2C_FLAG_MASK)) ? SET : RESET))
+
+
+
 #define I2C_ADDRESS 0x68  // Адрес I2C устройства
 uint8_t dataToSend[2] = {0x68, 0xf7}; 
 uint8_t receivedData[2];
@@ -46,6 +52,45 @@ int I2C_StartBit_SetTime()
   }
   return 0;
 }
+
+int I2C_BTFBit_SetTime()
+{
+	//ждем передачу данных
+  while (!(I2C1->SR1 & I2C_SR1_BTF))
+  {
+  }
+  return 0;
+}
+
+//HAL_StatusTypeDef I2C_WaitOnFlagUntilTimeoutT(I2C_HandleTypeDef *hi2c, uint32_t Flag, FlagStatus Status, uint32_t Timeout, uint32_t Tickstart)
+//{
+//  /* Wait until flag is set */
+//  //while (__HAL_I2C_GET_FLAG(hi2c, Flag) == 0)
+//	while (!(I2C1->SR1 & I2C_SR1_BTF) )
+//  {
+//		
+//		
+//		//BTF flag
+//    /* Check for the Timeout */
+////    if (Timeout != HAL_MAX_DELAY)
+////    {
+////      if (((HAL_GetTick() - Tickstart) > Timeout) || (Timeout == 0U))
+////      {
+////        hi2c->PreviousState     = I2C_STATE_NONE;
+////        hi2c->State             = HAL_I2C_STATE_READY;
+////        hi2c->Mode              = HAL_I2C_MODE_NONE;
+////        hi2c->ErrorCode         |= HAL_I2C_ERROR_TIMEOUT;
+
+////        /* Process Unlocked */
+////        __HAL_UNLOCK(hi2c);
+
+////        return HAL_ERROR;
+////      }
+////    }
+//  }
+////I2C_StartBit_SetTime();
+//  return 0;
+//}
 
 
 int I2C_MasterRequestRead(uint16_t DevAddress)
@@ -153,6 +198,13 @@ HAL_StatusTypeDef HAL_I2C_Master_ReceiveT(uint16_t DevAddress, uint8_t *pData, u
         if (Size == 2U)
         {
 		
+					/* Wait until BTF flag is set */
+//          if (I2C_WaitOnFlagUntilTimeoutT(hi2c, I2C_FLAG_BTF, 0, Timeout, tickstart) != 0)
+//          {
+//            return HAL_ERROR;
+//          }
+					I2C_BTFBit_SetTime();
+					
 					/* Generate Stop */
 					I2C1->CR1 |=1 << I2C_CR1_STOP_Pos;
 		

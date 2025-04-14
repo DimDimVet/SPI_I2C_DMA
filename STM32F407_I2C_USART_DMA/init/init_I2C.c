@@ -26,54 +26,71 @@ void Config_GPIO_I2C()
     GPIOB->MODER |= 2 << GPIO_MODER_MODE6_Pos;   // Альтернативная функция для PB6 (SCL)
 		GPIOB->OTYPER |= 1 << GPIO_OTYPER_OT6_Pos;//открытый коллектор
 		GPIOB->OSPEEDR |= 3 << GPIO_OSPEEDR_OSPEED6_Pos;//скорость
-		//GPIOB->PUPDR |= 2 << GPIO_PUPDR_PUPD6_Pos;//подтянем+
 
     GPIOB->MODER |= 0 << GPIO_MODER_MODE7_Pos;  // Очистка режима для PB7
     GPIOB->MODER |= 2 << GPIO_MODER_MODE7_Pos;   // Альтернативная функция для PB7 (SDA)
 		GPIOB->OTYPER |= 1 << GPIO_OTYPER_OT7_Pos;//открытый коллектор
 		GPIOB->OSPEEDR |= 3 << GPIO_OSPEEDR_OSPEED7_Pos;//скорость
-		//GPIOB->PUPDR |= 2 << GPIO_PUPDR_PUPD7_Pos;//подтянем+
 	
-//		GPIOB->MODER &= ~(GPIO_MODER_MODER6 | GPIO_MODER_MODER7);
-//    GPIOB->MODER |= (2 << GPIO_MODER_MODER6_Pos | 2 << GPIO_MODER_MODER7_Pos); // Альтернативная функция
-//	
     GPIOB->AFR[0] |= 4 << GPIO_AFRL_AFSEL6_Pos;// AF4 для I2C PB6 (SCL)
     GPIOB->AFR[0] |= 4 << GPIO_AFRL_AFSEL7_Pos;// AF4 для I2C PB7 (SDA)
 	
-//	GPIOB->MODER &= ~(GPIO_MODER_MODE6 | GPIO_MODER_MODE7);
-//    GPIOB->MODER |= (GPIO_MODER_MODE6_1 | GPIO_MODER_MODE7_1); // Альтернативный режим
-//	GPIOB->AFR[0] |= (4 << (6 * 4)) | (4 << (7 * 4)); // AF4 для I2C1
-//    //GPIOB->OTYPER |= (GPIO_OTYPER_OT6 | GPIO_OTYPER_OT7); // Открытый коллектор
-//    GPIOB->OSPEEDR |= (GPIO_OSPEEDR_OSPEED6 | GPIO_OSPEEDR_OSPEED7); // Высокая скорость
-//    //GPIOB->PUPDR |= (GPIO_PUPDR_PUPD6_1 | GPIO_PUPDR_PUPD7_1); // Подтяжка к питанию
-		
 }
+
+uint32_t I2C_SPEED(uint32_t pclk, uint32_t speed, uint32_t dutyCycle)
+{
+    uint32_t timing = 0;
+
+    if (dutyCycle == I2C_CCR_DUTY)
+    {
+        // Формула для коэффициента заполнения 16/9
+        timing = (pclk / (speed * 9)) - 1;
+    }
+    else
+    {
+        // Формула для коэффициента заполнения 1/2
+        timing = (pclk / (speed * 2)) - 1;
+    }
+
+    return timing;
+}
+
 
 void Config_I2C()
 {
-//		I2C1->CR1=I2C_CR1_SWRST;//сброс
-//		I2C1->CR1&=~I2C_CR1_SWRST;//отключили сброс
-//		
-//		I2C1->CR2 |= 16 << I2C_CR2_FREQ_Pos;//установка частоты
-//		I2C1->CCR |= 80 << I2C_CCR_CCR_Pos;// Настройка условного задержки
-//		I2C1->TRISE |= 17 << I2C_TRISE_TRISE_Pos;// Максимальное время подъема
-//		
-//		I2C1->CR1 |= 1 << I2C_CR1_PE_Pos;
+	 uint32_t freqrange;
+   uint32_t pclk1;
+	 
+	/*Reset I2C*/
+  I2C1->CR1 |= I2C_CR1_SWRST;
+  I2C1->CR1 &= ~I2C_CR1_SWRST;
 	
-//	    // Настройка I2C
-//    I2C1->CR1 = 0; // Отключаем I2C
-//    I2C1->CR2 = 0x10; // Устанавливаем частоту 16 МГц
-//    I2C1->CCR = 0x28; // Устанавливаем коэффициент для 100 кГц
-//    I2C1->TRISE = 0x10; // Максимальное время восходящего фронта
-//    I2C1->CR1 |= I2C_CR1_PE; // Включаем I2C
+	  /* Get PCLK1 frequency */
+  //pclk1 = HAL_RCC_GetPCLK1Freq();
+	pclk1 =0x00F42400;
+  freqrange = pclk1/1000000;
 	
-        I2C1->CR1 &= ~I2C_CR1_PE; // Отключаем I2C
-        I2C1->CR2 = 16; //42; // Частота APB1 в MHz
-//				I2C1->OAR1 = (0x2A << 1); // Адрес слейва
-//				I2C1->CR1 |= I2C_CR1_ACK;
-        I2C1->CCR = 180; //210; // Настройка скорости I2C для 100kHz
-        I2C1->TRISE = 9; //43; // TRISE
-        I2C1->CR1 |= I2C_CR1_PE; // Включаем I2C
+  /* Configure I2Cx: Frequency range */
+	I2C1->CR2 |= freqrange << I2C_CR2_FREQ_Pos;
+	
+  /* Configure I2Cx: Rise Time */
+	I2C1->TRISE |= I2C_RISE_TIME(freqrange, CLOCK_SPEED) << I2C_TRISE_TRISE_Pos;
+
+  /* Configure I2Cx: Speed */
+ 	I2C1->CCR |= I2C_SPEED(pclk1, CLOCK_SPEED, 0);// << (I2C_CCR_FS_Pos | I2C_CCR_DUTY_Pos | I2C_CCR_CCR_Pos);
+
+  /* Configure I2Cx: Generalcall and NoStretch mode */
+	I2C1->CR1 |= (0 | 0) << (I2C_CR1_ENGC_Pos | I2C_CR1_NOSTRETCH_Pos);
+
+  /* Configure I2Cx: Own Address1 and addressing mode */
+	I2C1->OAR1 |= (I2C_ADDRESSINGMODE_7BIT | 0) << (I2C_OAR1_ADDMODE_Pos|I2C_OAR1_ADD0_Pos);
+	
+  /* Configure I2Cx: Dual mode and Own Address2 */
+	I2C1->OAR2 |= (0 | 0) << (I2C_OAR2_ENDUAL_Pos | I2C_OAR2_ADD2_Pos);
+	
+  /* Enable the selected I2C peripheral */
+	I2C1->CR1 |= 1<<I2C_CR1_PE_Pos;
+	
 
 }
 

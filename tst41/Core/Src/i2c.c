@@ -23,7 +23,11 @@
 /* USER CODE BEGIN 0 */
 #define I2C_STATE_NONE            ((uint32_t)(HAL_I2C_MODE_NONE)) 
 /* USER CODE END 0 */
-
+#define CLOCK_SPEED 100000
+#define I2C_ADDRESSINGMODE_7BIT         0x00004000U
+  uint32_t freqrange;
+  uint32_t pclk1;
+	
 I2C_HandleTypeDef hi2c1;
 
 void MX_I2C1_Init(void)
@@ -42,34 +46,18 @@ void MX_I2C1_Init(void)
 //		Error_Handler();
 //	}	
 	
-  uint32_t freqrange;
-  uint32_t pclk1;
-// Настройка I2C (100kHz)
- /* Calculate frequency range */
- 
- //hi2c1.Lock = HAL_UNLOCKED;
-     /* Init the low level hardware : GPIO, CLOCK, NVIC */
-    HAL_I2C_MspInit(&hi2c1);
 
-  //hi2c1.State = HAL_I2C_STATE_BUSY;
 
-  /* Disable the selected I2C peripheral */
-  //__HAL_I2C_DISABLE(&hi2c1);
+  HAL_I2C_MspInit(&hi2c1);
 
   /*Reset I2C*/
   I2C1->CR1 |= I2C_CR1_SWRST;
   I2C1->CR1 &= ~I2C_CR1_SWRST;
 
   /* Get PCLK1 frequency */
-  pclk1 = HAL_RCC_GetPCLK1Freq();
-
-//  /* Check the minimum allowed PCLK1 frequency */
-//  if (I2C_MIN_PCLK_FREQ(pclk1, hi2c1.Init.ClockSpeed) == 1U)
-//  {
-//    //return HAL_ERROR;
-//  }
- 
-  freqrange = I2C_FREQRANGE(pclk1);
+  //pclk1 = HAL_RCC_GetPCLK1Freq();
+	pclk1 =0x00F42400;
+  freqrange = pclk1/1000000;
 
   /*---------------------------- I2Cx CR2 Configuration ----------------------*/
   /* Configure I2Cx: Frequency range */
@@ -78,11 +66,11 @@ void MX_I2C1_Init(void)
   /*---------------------------- I2Cx TRISE Configuration --------------------*/
   /* Configure I2Cx: Rise Time */
   //MODIFY_REG(I2C1->TRISE, I2C_TRISE_TRISE, I2C_RISE_TIME(freqrange, hi2c1.Init.ClockSpeed));
-	I2C1->TRISE |= I2C_RISE_TIME(freqrange, hi2c1.Init.ClockSpeed) << I2C_TRISE_TRISE_Pos;
+	I2C1->TRISE |= I2C_RISE_TIME(freqrange, CLOCK_SPEED) << I2C_TRISE_TRISE_Pos;
   /*---------------------------- I2Cx CCR Configuration ----------------------*/
   /* Configure I2Cx: Speed */
   //MODIFY_REG(I2C1->CCR, (I2C_CCR_FS | I2C_CCR_DUTY | I2C_CCR_CCR), I2C_SPEED(pclk1, hi2c1.Init.ClockSpeed, hi2c1.Init.DutyCycle));
-	I2C1->CCR |= I2C_SPEED(pclk1, hi2c1.Init.ClockSpeed, hi2c1.Init.DutyCycle);// << (I2C_CCR_FS_Pos | I2C_CCR_DUTY_Pos | I2C_CCR_CCR_Pos);
+	I2C1->CCR |= I2C_SPEED(pclk1, CLOCK_SPEED, 0);// << (I2C_CCR_FS_Pos | I2C_CCR_DUTY_Pos | I2C_CCR_CCR_Pos);
 //	I2C1->CCR |=pclk1 << I2C_CCR_CCR_Pos;
 //	I2C1->CCR |=0 << I2C_CCR_FS_Pos;
 //	I2C1->CCR |=hi2c1.Init.DutyCycle << I2C_CCR_DUTY_Pos;
@@ -90,22 +78,22 @@ void MX_I2C1_Init(void)
   /*---------------------------- I2Cx CR1 Configuration ----------------------*/
   /* Configure I2Cx: Generalcall and NoStretch mode */
   //MODIFY_REG(I2C1->CR1, (I2C_CR1_ENGC | I2C_CR1_NOSTRETCH), (hi2c1.Init.GeneralCallMode | hi2c1.Init.NoStretchMode));
-	I2C1->CR1 |= (hi2c1.Init.GeneralCallMode | hi2c1.Init.NoStretchMode) << (I2C_CR1_ENGC_Pos | I2C_CR1_NOSTRETCH_Pos);
+	I2C1->CR1 |= (0 | 0) << (I2C_CR1_ENGC_Pos | I2C_CR1_NOSTRETCH_Pos);
   /*---------------------------- I2Cx OAR1 Configuration ---------------------*/
   /* Configure I2Cx: Own Address1 and addressing mode */
   //MODIFY_REG(I2C1->OAR1, (I2C_OAR1_ADDMODE | I2C_OAR1_ADD8_9 | I2C_OAR1_ADD1_7 | I2C_OAR1_ADD0), (hi2c1.Init.AddressingMode | hi2c1.Init.OwnAddress1));
-	I2C1->OAR1 |= (hi2c1.Init.AddressingMode | hi2c1.Init.OwnAddress1) << (I2C_OAR1_ADDMODE_Pos|I2C_OAR1_ADD0_Pos);
+	I2C1->OAR1 |= (I2C_ADDRESSINGMODE_7BIT | 0) << (I2C_OAR1_ADDMODE_Pos|I2C_OAR1_ADD0_Pos);
   /*---------------------------- I2Cx OAR2 Configuration ---------------------*/
   /* Configure I2Cx: Dual mode and Own Address2 */
   //MODIFY_REG(I2C1->OAR2, (I2C_OAR2_ENDUAL | I2C_OAR2_ADD2), (hi2c1.Init.DualAddressMode | hi2c1.Init.OwnAddress2));
-	I2C1->OAR2 |= (hi2c1.Init.DualAddressMode | hi2c1.Init.OwnAddress2) << (I2C_OAR2_ENDUAL_Pos | I2C_OAR2_ADD2_Pos);
+	I2C1->OAR2 |= (0 | 0) << (I2C_OAR2_ENDUAL_Pos | I2C_OAR2_ADD2_Pos);
 //  /* Enable the selected I2C peripheral */
  //__HAL_I2C_ENABLE(&hi2c1);
-
-  hi2c1.ErrorCode = HAL_I2C_ERROR_NONE;
+I2C1->CR1 |= 1<<I2C_CR1_PE_Pos;
+//  hi2c1.ErrorCode = HAL_I2C_ERROR_NONE;
   hi2c1.State = HAL_I2C_STATE_READY;
-  hi2c1.PreviousState = I2C_STATE_NONE;
-  hi2c1.Mode = HAL_I2C_MODE_NONE;
+//  hi2c1.PreviousState = I2C_STATE_NONE;
+//  hi2c1.Mode = HAL_I2C_MODE_NONE;
 	
 }
 
