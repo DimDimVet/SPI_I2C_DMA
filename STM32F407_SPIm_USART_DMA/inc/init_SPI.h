@@ -5,7 +5,7 @@
 #include <string.h>
 #include "stm32f4xx.h"
 
-#define SIZE_BUF_RX_SPI 10
+#define SIZE_BUF_RX_SPI 100
 
 void Init_SPI(void);
 void Enable_RCC_SPI1(void);

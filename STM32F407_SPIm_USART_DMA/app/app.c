@@ -1,7 +1,14 @@
 #include "app.h"
 
-char rezultStr [SIZESTR];
-char* receivedChar;
+char rezultStrBase[SIZESTR];
+char *rezultStr=rezultStrBase;
+
+char receivedStringConsoleBase[SIZESTR];
+char *receivedStringConsole=receivedStringConsoleBase;
+
+char receivedStringSPIBase[SIZESTR];
+char *receivedStringSPI=receivedStringSPIBase;
+
 uint32_t* str_In;
 uint8_t tst;
 
@@ -21,7 +28,7 @@ void DMA1_Stream3_IRQHandler(void)
 		
     if (DMA1->LISR & DMA_LISR_TCIF3)
     {
-						str_In=Read_SPI2_DMA();
+						receivedStringSPI=(char*)Read_SPI2_DMA();
 			
         DMA1->LIFCR |= DMA_LIFCR_CTCIF3; // Сбрасываем флаг
     }
@@ -43,16 +50,22 @@ void DMA2_Stream2_IRQHandler(void)
     {
         ExecutorTerminal();
         DMA2->LIFCR |= DMA_LIFCR_CTCIF2;
+				delay_ms(100);
         LED6();
+				//SPI2_DMA_TransmitReceive(receivedStringConsole);
     }
 }
 
 void ExecutorTerminal()
 {
-  receivedChar = DMA2_ReadChar(); // Читаем из консоли
+  DMA2_USART1_ReadChar(receivedStringConsole); // Читаем из консоли
 	// отправляем в консоль
-	snprintf(rezultStr, sizeof rezultStr, "%s%s",set_infoStr,(char*)str_In);
-	DMA2_SetString(rezultStr);
+	snprintf(rezultStr, SIZESTR, "%s%s-%s",set_infoStr,receivedStringConsole,receivedStringSPI);
+	
+	SPI2_DMA_TransmitReceive(rezultStr);
+	delay_ms(500);
+	DMA2_USART1_SetString(rezultStr);
+	//
 }
 
 /////////////////
@@ -65,7 +78,6 @@ int main()
 
     while(1)
     {
-				SPI2_DMA_TransmitReceive(receivedChar);
         //tst = SPI2_TransmitReceive(0xDF);//test net DMA
     }
 		

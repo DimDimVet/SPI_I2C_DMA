@@ -90,18 +90,25 @@ void Config_USART1_DMA2()
 }
 ///////////////////////////
 
-char* DMA2_ReadChar()//считываем массив[0]
+void DMA2_USART1_ReadChar(char* readChar)//считываем массив[0]
 {
-    return dataBufRxUSART;
+delay_ms(100);
+readChar[0]=dataBufRxUSART[0];
+readChar[1]=dataBufRxUSART[1];
+//		for(int i; i< SIZE_BUF_RX_USART; i++)
+//		{
+//				readChar[i]=dataBufRxUSART[i];
+//		}
 }
 
-void DMA2_SetString(char* str)//Установка строки по символьно
+void DMA2_USART1_SetString(char* str)//Установка строки по символьно
 {
-    uint8_t sizeTxU = strlen(str);
-
-    DMA2_Stream7->CR &= ~DMA_SxCR_EN;
-    DMA2_Stream7->NDTR = sizeTxU;
-    DMA2_Stream7->M0AR = (uint32_t)str;
-    DMA2_Stream7->CR |= DMA_SxCR_EN;
+			DMA2_Stream7->CR &= ~DMA_SxCR_EN;
+			
+			uint8_t sizeTxU = strlen(str);
+			
+			DMA2_Stream7->NDTR = sizeTxU;
+			DMA2_Stream7->M0AR = (uint32_t)str;
+			DMA2_Stream7->CR |= DMA_SxCR_EN;
 
 }

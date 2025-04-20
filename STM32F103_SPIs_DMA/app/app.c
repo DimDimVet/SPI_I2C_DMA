@@ -1,7 +1,8 @@
 #include "app.h"
 
 uint8_t tst;
-char *data_In;
+char data_In_Base[SIZE_REVERC_DATA];
+char* data_In=data_In_Base;
 
 void DMA1_Channel2_IRQHandler() 
 {

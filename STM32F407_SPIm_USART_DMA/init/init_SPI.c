@@ -72,7 +72,7 @@ void Config_SPI1_DMA1()
     DMA1_Stream4->CR |= 0 << DMA_SxCR_MSIZE_Pos;//Размер данных памяти1
     DMA1_Stream4->CR |= 0 << DMA_SxCR_PSIZE_Pos;//Размер периферийных данных
     DMA1_Stream4->CR |= 1 << DMA_SxCR_MINC_Pos;//Режим приращения памяти
-    DMA1_Stream4->CR |= 0 << DMA_SxCR_PINC_Pos;//Режим приращения периферийных устройств
+    DMA1_Stream4->CR |= 1 << DMA_SxCR_PINC_Pos;//Режим приращения периферийных устройств
     DMA1_Stream4->CR |= 0 << DMA_SxCR_CIRC_Pos;//кольцевой режим
     DMA1_Stream4->CR |= 1 << DMA_SxCR_DIR_Pos;//направление передачи данных 00: периферийное устройство-память 01: память-периферийное устройство
     DMA1_Stream4->CR |= 1 << DMA_SxCR_TCIE_Pos;//Разрешение прерывания завершения передачи
@@ -124,11 +124,11 @@ uint32_t* Read_SPI2_DMA()
 
 void SPI2_DMA_TransmitReceive(char *str_data)
 {
-		uint8_t sizeTxU = strlen(str_data);
-	
-    DMA1_Stream4->CR &= ~DMA_SxCR_EN;
-    DMA1_Stream4->NDTR = sizeTxU;		
-    DMA1_Stream4->M0AR = (uint32_t)str_data; // Указание адреса буфера передачи
-    DMA1_Stream4->CR |= DMA_SxCR_EN;     // Включаем DMA
+			char str_data1[5]="AW";
+			DMA1_Stream4->CR &= ~DMA_SxCR_EN;
+			uint8_t sizeTxU = strlen(str_data);
+			DMA1_Stream4->NDTR = 100;		
+			DMA1_Stream4->M0AR = (uint32_t)str_data1; // Указание адреса буфера передачи
+			DMA1_Stream4->CR |= DMA_SxCR_EN;     // Включаем DMA
 }
 

@@ -4,8 +4,9 @@
 #include <stdio.h>
 #include <string.h>
 #include "stm32f10x.h" 
+#include "delay.h"
 
-#define SIZE_BUF 10
+#define SIZE_BUF 100
 
 void Init_SPI(void);//config spi
 void Enable_RCC_SPI1(void);//прерывание

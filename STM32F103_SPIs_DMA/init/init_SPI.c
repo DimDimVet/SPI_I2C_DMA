@@ -89,12 +89,12 @@ void Config_SPI1_DMA1()
 		DMA1_Channel3->CCR |= DMA_CCR3_EN; // Включение канала DMA
 
 		DMA1_Channel2->CCR |=0;
-		DMA1_Channel2->CCR &= ~DMA_CCR2_MEM2MEM;//режим памяти в память
-		DMA1_Channel2->CCR &= ~DMA_CCR2_PL;//уровень приоритета канала
-		DMA1_Channel2->CCR |= DMA_CCR2_MSIZE_0;//размер памяти
-		DMA1_Channel2->CCR |= DMA_CCR2_MSIZE_1;
-		DMA1_Channel2->CCR |= DMA_CCR2_PSIZE_0;//размер периферии
-		DMA1_Channel2->CCR |= DMA_CCR2_PSIZE_1;
+		//DMA1_Channel2->CCR &= ~DMA_CCR2_MEM2MEM;//режим памяти в память
+		//DMA1_Channel2->CCR &= ~DMA_CCR2_PL;//уровень приоритета канала
+		//DMA1_Channel2->CCR |= DMA_CCR2_MSIZE_0;//размер памяти
+		//DMA1_Channel2->CCR |= DMA_CCR2_MSIZE_1;
+		//DMA1_Channel2->CCR |= DMA_CCR2_PSIZE_0;//размер периферии
+		//DMA1_Channel2->CCR |= DMA_CCR2_PSIZE_1;
 		DMA1_Channel2->CCR |= DMA_CCR2_MINC;//Режим приращения памяти
 		DMA1_Channel2->CCR |= DMA_CCR2_PINC;//Режим периферийного приращения
 		DMA1_Channel2->CCR |= DMA_CCR2_CIRC;//Кольцевой режим
@@ -133,15 +133,24 @@ uint8_t SPI_TransmitReceive(uint8_t data)
 
 char* Read_SPI1_DMA1()
 {
+delay_ms(1000);
+		char t1=dataBufRxSPI[0];
+		char t2=dataBufRxSPI[1];
+		char t3=dataBufRxSPI[2];
+		char t4=dataBufRxSPI[3];
+		char t5=dataBufRxSPI[4];
+		
     return dataBufRxSPI;
 }
 
 
 void SPI1_DMA1_TransmitReceive(char *str_data)
 {
+	char str_data1[5]="AW";
     DMA1_Channel3->CCR &= ~DMA_CCR3_EN;
-    DMA1_Channel3->CNDTR = SIZE_BUF;		
-    DMA1_Channel3->CMAR = (uint32_t)str_data; // Указание адреса буфера передачи
+		uint8_t sizeTxU = strlen(str_data);
+    DMA1_Channel3->CNDTR = 5;		
+    DMA1_Channel3->CMAR = (uint32_t)str_data1; // Указание адреса буфера передачи
     DMA1_Channel3->CCR |= DMA_CCR3_EN;     // Включаем DMA
 }
 
