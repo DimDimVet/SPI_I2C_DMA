@@ -71,8 +71,8 @@ void Config_USART1_DMA2()
     DMA2_Stream2->CR |= 0 << DMA_SxCR_PBURST_Pos;//Конфигурация периферийной пакетной передачи
     DMA2_Stream2->CR |= 0 << DMA_SxCR_PL_Pos;//уровень приоритета
     DMA2_Stream2->CR |= 0 << DMA_SxCR_PINCOS_Pos;//размер смещения периферийного приращения связан с PSIZE
-    DMA2_Stream2->CR |= 2 << DMA_SxCR_MSIZE_Pos;//Размер данных памяти
-    DMA2_Stream2->CR |= 2 << DMA_SxCR_PSIZE_Pos;//Размер периферийных данных
+    DMA2_Stream2->CR |= 1 << DMA_SxCR_MSIZE_Pos;//Размер данных памяти
+    DMA2_Stream2->CR |= 1 << DMA_SxCR_PSIZE_Pos;//Размер периферийных данных
     DMA2_Stream2->CR |= 1 << DMA_SxCR_MINC_Pos;//Режим приращения памяти
     DMA2_Stream2->CR |= 1 << DMA_SxCR_PINC_Pos;//Режим приращения периферийных устройств
     DMA2_Stream2->CR |= 1 << DMA_SxCR_CIRC_Pos;//кольцевой режим
@@ -103,6 +103,11 @@ readChar[1]=dataBufRxUSART[1];
 
 void DMA2_USART1_SetString(char* str)//Установка строки по символьно
 {
+	
+			if(str[0] == 0)
+					{
+					str="pusto";
+					}
 			DMA2_Stream7->CR &= ~DMA_SxCR_EN;
 			
 			uint8_t sizeTxU = strlen(str);

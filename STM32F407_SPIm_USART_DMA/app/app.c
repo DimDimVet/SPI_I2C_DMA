@@ -58,6 +58,12 @@ void DMA2_Stream2_IRQHandler(void)
 
 void ExecutorTerminal()
 {
+	
+//	  while (!(USART2->SR & USART_SR_TXE))//Проверим окончание передачи
+//		{
+//		}
+    USART2->DR = 0x11;
+	
   DMA2_USART1_ReadChar(receivedStringConsole); // Читаем из консоли
 	// отправляем в консоль
 	snprintf(rezultStr, SIZESTR, "%s%s-%s",set_infoStr,receivedStringConsole,receivedStringSPI);
