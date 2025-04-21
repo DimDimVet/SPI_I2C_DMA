@@ -54,8 +54,8 @@ void Config_SPI1()
     SPI2->CR1 |= 1 << SPI_CR1_CPHA_Pos;// фаза...
 
     SPI2->CR2 =0;
-    SPI2->CR2 |= 1 << SPI_CR2_RXDMAEN_Pos;// Включаем DMA
-    SPI2->CR2 |= 1 << SPI_CR2_TXDMAEN_Pos;// Включаем DMA
+    //SPI2->CR2 |= 1 << SPI_CR2_RXDMAEN_Pos;// Включаем DMA
+    //SPI2->CR2 |= 1 << SPI_CR2_TXDMAEN_Pos;// Включаем DMA
 
     SPI2->CR1 |= 1 << SPI_CR1_SPE_Pos;//Вкл SPI
 }

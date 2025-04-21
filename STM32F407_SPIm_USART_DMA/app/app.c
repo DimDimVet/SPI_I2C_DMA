@@ -84,7 +84,7 @@ int main()
 
     while(1)
     {
-        //tst = SPI2_TransmitReceive(0xDF);//test net DMA
+        tst = SPI2_TransmitReceive(0xDF);//test net DMA
     }
 		
     return 0;

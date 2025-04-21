@@ -32,7 +32,7 @@ int main()
 
 	while(1)
 	{
-		//tst = SPI_TransmitReceive(0);	
+		tst = SPI_TransmitReceive(0);	
 	}
 	return 0;
 }

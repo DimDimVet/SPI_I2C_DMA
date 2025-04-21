@@ -1,7 +1,5 @@
 #include "init_SPI.h"
 
-char dataBufRxSPI[SIZE_BUF];
-
 void Init_SPI()
 {
 		Enable_RCC_SPI1();
@@ -56,30 +54,79 @@ void Config_SPI1()
 		SPI1->CR1 &= ~SPI_CR1_BR_2;// f/4
 		SPI1->CR1 |= SPI_CR1_CPOL;// начальный фронт
 		SPI1->CR1 |= SPI_CR1_CPHA;// фаза...
-		SPI1->CR2 = SPI_CR2_RXNEIE | SPI_CR2_TXEIE; // Включаем прерывания RXNE и TXE
-   
-		NVIC_EnableIRQ(SPI1_IRQn); // Включаем прерывание SPI1
+
+		SPI1->CR2 |=SPI_CR2_TXDMAEN;//переключили дма на spi - передача, DMAT = Tx
+		SPI1->CR2 |=SPI_CR2_RXDMAEN;//переключили дма на spi - чтение, DMAR = Rx
 		
 		SPI1->CR1 |= SPI_CR1_SPE;//Вкл SPI
-		
 		
 }
 
 //////////////
-uint8_t SPI_TransmitReceive(uint8_t data)
+void SPI1_ReadString(char *data)//считываем регистр 
+{
+//	for(int i=0; i < SIZE_BUF_RX_SPI; i++)
+//	{	
+		while (!(SPI1->SR & SPI_SR_RXNE))
+		{};
+  	uint8_t temp = SPI1->DR;
+
+		data[0]= temp;
+//	}
+}
+
+void SPI1_SetString(char* str)//Установка строки по символьно
+{
+		int size = strlen(str);
+		
+//		for(int i=0; i<size;i++)
+//		{
+			while (!(SPI1->SR & SPI_SR_TXE))//Проверим окончание передачи
+			{
+			}
+			SPI1->DR = str[0];
+//		}
+}
+
+//////////////
+uint8_t SPI_TransmitReceive(char *data)
 {
 	uint8_t data1;
 
-		if(SPI1->SR & SPI_SR_RXNE)
+//		if(SPI1->SR & SPI_SR_RXNE)
+//		{
+
+	for(int i=0; i < SIZE_BUF_RX_SPI; i++)
+	{	
+		while (!(SPI1->SR & SPI_SR_RXNE))
+		{};
+  	uint8_t temp = SPI1->DR;
+
+		data[i]= temp;
+	}
+			
+	//delay_ms(1000);
+//			while (!(SPI1->SR & SPI_SR_TXE)); // Ждём, пока TXE станет 1
+//			SPI1->DR = data[0];  
+//			return SPI1->DR;
+			
+		for(int i=0; i< SIZE_BUF_RX_SPI;i++)
 		{
-					data1=SPI1->DR;
-			    while (!(SPI1->SR & SPI_SR_TXE)); // Ждём, пока TXE станет 1
-					SPI1->DR = data1;  
-			return SPI1->DR;
+			while (!(SPI1->SR & SPI_SR_TXE))//Проверим окончание передачи
+			{
+			};
+			
+			SPI1->DR = data[i];
+			
 		}
-		else
-		{
-			return SPI1->DR;
-		}
+		return SPI1->DR;
+			
+			
+			
+//		}
+//		else
+//		{
+//			return SPI1->DR;
+//		}
 }
 

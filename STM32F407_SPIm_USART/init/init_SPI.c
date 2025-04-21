@@ -51,23 +51,96 @@ void Config_SPI1(void)
     SPI2->CR1 |= 1 << SPI_CR1_CPHA_Pos;// фаза...
 
     SPI2->CR2 =0;
-    SPI2->CR2 |= 1 << SPI_CR2_RXDMAEN_Pos;// Включаем DMA
-    SPI2->CR2 |= 1 << SPI_CR2_TXDMAEN_Pos;// Включаем DMA
+    //SPI2->CR2 |= 1 << SPI_CR2_RXDMAEN_Pos;// Включаем DMA
+    //SPI2->CR2 |= 1 << SPI_CR2_TXDMAEN_Pos;// Включаем DMA
+		//SPI2->CR2 = SPI_CR2_RXNEIE;// | SPI_CR2_TXEIE;
+		//NVIC_EnableIRQ(SPI2_IRQn); // Включаем прерывание SPI2
 
     SPI2->CR1 |= 1 << SPI_CR1_SPE_Pos;//Вкл SPI
 }
 
+//////////////
+void SPI2_ReadString(char *data)//считываем регистр 
+{
+	error_count=LIMIT_ERROR_COUNT;
+	
+//	for(int i=0; i < SIZE_BUF_RX_SPI; i++)
+//	{	
+		while (!(SPI2->SR & SPI_SR_RXNE))
+		{
+//				if(error_count <= 0)
+//				{
+//					break;
+//				}
+//				else
+//				{
+//					error_count--;
+//				}
+		};
+		
+  	uint8_t temp = SPI2->DR;
+
+		data[0]= temp;
+//	}
+}
+
+void SPI2_SetString(char* str)//Установка строки по символьно
+{
+		int size = strlen(str);
+		
+//		for(int i=0; i<size;i++)
+//		{
+			while (!(SPI2->SR & SPI_SR_TXE))//Проверим окончание передачи
+			{
+//				if(error_count <= 0)
+//				{
+//					break;
+//				}
+//				else
+//				{
+//					error_count--;
+//				}
+			}
+			SPI2->DR = str[0];
+//		}
+}
 
 ///////////////////////
-uint32_t SPI2_TransmitReceive(uint8_t data)
-{
-    while (!(SPI2->SR & SPI_SR_TXE))
-    {}
-    SPI2->DR = data;
+//uint32_t SPI2_TransmitReceive(uint8_t data)
+//{
+//    while (!(SPI2->SR & SPI_SR_TXE))
+//    {};
+//    SPI2->DR = data;
+//		
+//		delay_ms(100);
+//		
+//    while (!(SPI2->SR & SPI_SR_RXNE))
+//    {}
+//    return SPI2->DR;
+//}
 
-    while (!(SPI2->SR & SPI_SR_RXNE))
-    {}
-    return SPI2->DR;
+///////////////////////
+char SPI2_TransmitReceive(char* data)
+{
+		for(int i=0; i< SIZE_BUF_RX_SPI; i++)
+		{
+				while (!(SPI2->SR & SPI_SR_TXE))
+				{}
+				SPI2->DR = data[i];
+		}
+		
+    delay_ms(1000);
+		
+		char* data1;
+		for(int i=0; i< SIZE_BUF_RX_SPI; i++)
+		{
+				while (!(SPI2->SR & SPI_SR_RXNE))
+				{}
+				uint8_t temp = SPI2->DR;
+				data1[i]= temp;
+		}
+		
+    return data1[0];
 }
 
 

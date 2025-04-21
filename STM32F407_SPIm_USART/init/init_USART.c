@@ -33,7 +33,7 @@ void Config_USART1(uint16_t baudRate)
 
     USART1->CR1 |= 1 << USART_CR1_TE_Pos; // Включить TX
     USART1->CR1 |= 1 << USART_CR1_RE_Pos; // Включить RX
-		USART1->CR2 |= 2 << USART_CR2_STOP_Pos;//Установили STOP бит
+		//USART1->CR2 |= 2 << USART_CR2_STOP_Pos;//Установили STOP бит
    	USART1->CR1 |= 1 << USART_CR1_RXNEIE_Pos; // Включить прерывание
 //    USART1->CR3 |= 1 << USART_CR3_DMAR_Pos;
 //    USART1->CR3 |= 1 << USART_CR3_DMAT_Pos;
@@ -63,6 +63,7 @@ void USART1_SetString(char* str)//Установка строки по симв�
 		{
 			while (!(USART1->SR & USART_SR_TXE))//Проверим окончание передачи
 			{
+				
 			}
 			USART1->DR = str[i];
 		}
