@@ -3,6 +3,8 @@
 uint8_t tst;
 char data_In_Base[SIZE_REVERC_DATA];
 char* data_In=data_In_Base;
+volatile uint8_t rxIndex = 0;
+volatile uint8_t txIndex = 0;
 
 void SPI1_IRQHandler(void)
 {
@@ -12,7 +14,45 @@ void SPI1_IRQHandler(void)
 //	snprintf(rezultStr, SIZESTR, "%s%s",set_infoStr,receivedStringSPI);
 //	
 //	SPI1_SetString(receivedStringSPI);
+	
+//	 if (SPI1->SR & SPI_SR_RXNE)
+//		 {
+//        receivedStringSPI[rxIndex++] = SPI1->DR;
+//        if(rxIndex >= SIZE_REVERC_DATA) rxIndex = 0;
+//		}
+//		 
+//    if ((SPI1->SR & SPI_SR_TXE) && (txIndex < SIZE_REVERC_DATA))
+//			{
+//        SPI1->DR = receivedStringSPI[txIndex++];
+//        if(txIndex >= SIZE_REVERC_DATA) txIndex = 0;
+//			}
+		
+	if (SPI1->SR & SPI_SR_RXNE)
+	{
+				while ((SPI1->SR & SPI_SR_RXNE))
+				{
+					receivedStringSPI[rxIndex++] = SPI1->DR;
+					if(rxIndex >= SIZE_REVERC_DATA)
+					{
+						rxIndex = 0; break;
+					}
+				};
+				////
+				while ((SPI1->SR & SPI_SR_TXE))//Проверим окончание передачи
+				{
+					SPI1->DR = receivedStringSPI[rxIndex++];
+					if(rxIndex >= SIZE_REVERC_DATA)
+					{
+						rxIndex = 0; break;
+					}
+				};
+	}
+	
 }
+	
+	
+	
+
 
 
 int main()
@@ -22,7 +62,7 @@ int main()
 
 	while(1)
 	{
-		tst = SPI_TransmitReceive(receivedStringSPI);	
+		//tst = SPI_TransmitReceive(receivedStringSPI);	
 		//SPI1_SetString(receivedStringSPI);
 	}
 	return 0;

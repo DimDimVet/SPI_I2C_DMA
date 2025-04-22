@@ -3,15 +3,14 @@
 static char rezultStrBase[SIZESTR];
 static char *rezultStr=rezultStrBase;
 
-static char receivedStringConsoleBase[10];
+static char receivedStringConsoleBase[1];
 static char *receivedStringConsole=receivedStringConsoleBase;
 
-static char receivedStringSPIBase[1];
+static char receivedStringSPIBase[5];
 static char *receivedStringSPI=receivedStringSPIBase;
 
 uint32_t* str_In;
 uint8_t tst;
-
 
 void USART1_IRQHandler(void)
 {
@@ -57,10 +56,10 @@ int main(void)
     Init_LED();
 		Init_USART1(BAUND_RATE);
     Init_SPI();
-		receivedStringConsole="asdf";
+		receivedStringConsole="asd22f";
     while(1)
     {
-				tst = SPI2_TransmitReceive(receivedStringConsole);//test net DMA
+				receivedStringSPI = SPI2_TransmitReceive(receivedStringConsole);//test net DMA
 				//USART1_SetString(receivedStringConsole);
 
     }

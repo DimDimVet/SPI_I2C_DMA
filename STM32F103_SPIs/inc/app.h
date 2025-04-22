@@ -5,7 +5,7 @@
 #include "init_LED.h"
 #include "init_SPI.h"
 
-#define SIZE_REVERC_DATA 1
+#define SIZE_REVERC_DATA 5
 #define SIZESTR 100
 
 static char* set_infoStr="Out STM32F103 SPI: ";

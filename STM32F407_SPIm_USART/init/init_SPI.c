@@ -1,5 +1,8 @@
 #include "init_SPI.h"
 
+volatile uint8_t rxIndex = 0;
+volatile uint8_t txIndex = 0;
+
 void Init_SPI(void)
 {
     Enable_RCC_SPI1();
@@ -120,27 +123,31 @@ void SPI2_SetString(char* str)//Установка строки по симво�
 //}
 
 ///////////////////////
-char SPI2_TransmitReceive(char* data)
+char* SPI2_TransmitReceive(char* data)
 {
-		for(int i=0; i< SIZE_BUF_RX_SPI; i++)
-		{
-				while (!(SPI2->SR & SPI_SR_TXE))
-				{}
-				SPI2->DR = data[i];
-		}
+
+				while ((SPI2->SR & SPI_SR_TXE))
+				{
+					SPI2->DR = data[rxIndex++];
+					if(rxIndex >= SIZE_BUF_RX_SPI)
+					{
+						rxIndex = 0; break;
+					}
+				};
 		
-    delay_ms(1000);
+
+				while ((SPI2->SR & SPI_SR_RXNE))
+				{
+					dataBufTxSPI[rxIndex++] = SPI1->DR;
+					if(rxIndex >= SIZE_BUF_RX_SPI)
+					{
+						rxIndex = 0; break;
+					}
+				}
+				
 		
-		char* data1;
-		for(int i=0; i< SIZE_BUF_RX_SPI; i++)
-		{
-				while (!(SPI2->SR & SPI_SR_RXNE))
-				{}
-				uint8_t temp = SPI2->DR;
-				data1[i]= temp;
-		}
-		
-    return data1[0];
+//		
+    return (char*)dataBufTxSPI;
 }
 
 
