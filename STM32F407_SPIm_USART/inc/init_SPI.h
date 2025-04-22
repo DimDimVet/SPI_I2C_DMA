@@ -21,9 +21,11 @@ void Enable_RCC_SPI1(void);
 void Config_GPIO_SPI1(void);
 void Config_SPI1(void);
 
-char* SPI2_TransmitReceive(char* data);
+
+void SPI2_Tx();
+uint8_t* SPI2_TransmitReceive(uint8_t* data);
 void SPI2_ReadString(char *data);
-void SPI2_SetString(char* str);
+void SPI2_SetString(uint8_t* str, uint8_t size);
 
 #endif
 

@@ -59,7 +59,7 @@ void Config_SPI1()
 		//SPI1->CR2 |=SPI_CR2_RXDMAEN;//переключили дма на spi - чтение, DMAR = Rx
 		
 		SPI1->CR2 = SPI_CR2_RXNEIE;// | SPI_CR2_TXEIE;
-		SPI1->CR2 = SPI_CR2_TXEIE;// | SPI_CR2_TXEIE;
+		//SPI1->CR2 = SPI_CR2_TXEIE;// | SPI_CR2_TXEIE;
 		NVIC_EnableIRQ(SPI1_IRQn); // Включаем прерывание SPI2
 		
 		SPI1->CR1 |= SPI_CR1_SPE;//Вкл SPI
