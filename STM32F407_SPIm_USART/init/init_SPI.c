@@ -1,9 +1,9 @@
 #include "init_SPI.h"
 
-volatile uint8_t rxIndex = 0;
-volatile uint8_t txIndex = 0;
+//volatile uint8_t rxIndex = 0;
+//volatile uint8_t txIndex = 0;
 
-uint8_t flag=1;
+//uint8_t flag=1;
 
 void Init_SPI(void)
 {
@@ -64,56 +64,45 @@ void Config_SPI1(void)
     SPI2->CR1 |= 1 << SPI_CR1_SPE_Pos;//Вкл SPI
 }
 
-//////////////
-void SPI2_ReadString(char *data)//считываем регистр 
+//IRQ
+
+
+
+////
+uint8_t SPI2_ReadBayt()//считываем регистр 
 {
-	error_count=LIMIT_ERROR_COUNT;
+		uint8_t temp_bayt;
 	
-//	for(int i=0; i < SIZE_BUF_RX_SPI; i++)
-//	{	
-		while (!(SPI2->SR & SPI_SR_RXNE))
+		if(SPI2->SR & SPI_SR_RXNE)
 		{
-//				if(error_count <= 0)
-//				{
-//					break;
-//				}
-//				else
-//				{
-//					error_count--;
-//				}
-		};
+			temp_bayt=SPI2->DR;
+		}
 		
-  	uint8_t temp = SPI2->DR;
-
-		data[0]= temp;
-//	}
+  	return temp_bayt;
 }
 
-void SPI2_SetString(uint8_t* str, uint8_t size)//Установка строки по символьно
+uint8_t SPI2_SetBayt(uint8_t byte)//Установка строки по символьно
 {
-		flag=0;
-	  SPI2->DR = str[rxIndex]; //Записываем новое значение в DR
-		rxIndex++; //увеличиваем счетчик переданных байт на единицу
-  
-  //если все передали, то отключаем прерывание,
-  //тем самым завершаем передачу данных
-  if(rxIndex >= size)
-	{
-		SPI2->CR2 &= ~(1<<SPI_CR2_TXEIE_Pos);
-		flag=1;
-	}
+		SPI2->DR = byte; //Записываем новое значение в DR
+    while (!(SPI2->SR & SPI_SR_TXE))
+    {
+			while(SPI2->SR & SPI_SR_BSY)
+			{};
+		};
+		return 1;
+		//SPI2->CR2 &= ~(1<<SPI_CR2_TXEIE_Pos);
 }
 
-void SPI2_Tx()
-{
-		  //Ждем, пока SPI освободится от предыдущей передачи
-		while(SPI2->SR & SPI_SR_BSY)
-    {};
-  
-		//Разрешаем прерывание TXEIE И запускаем обмен
-		SPI2->CR2 |= (1<<SPI_CR2_TXEIE_Pos); 
+//void SPI2_Tx()
+//{
+//		  //Ждем, пока SPI освободится от предыдущей передачи
+//		while(SPI2->SR & SPI_SR_BSY)
+//    {};
+//  
+//		//Разрешаем прерывание TXEIE И запускаем обмен
+//		SPI2->CR2 |= (1<<SPI_CR2_TXEIE_Pos); 
 
-}
+//}
 
 
 
@@ -132,31 +121,15 @@ void SPI2_Tx()
 //}
 
 ///////////////////////
-uint8_t* SPI2_TransmitReceive(uint8_t* data)
+uint8_t SPI2_TransmitReceive(uint8_t data)
 {
+    while (!(SPI2->SR & SPI_SR_TXE))
+    {}
+    SPI2->DR = data;
 
-				while (!(SPI2->SR & SPI_SR_TXE))
-				{};
-					SPI2->DR = data[rxIndex++];
-					if(rxIndex >= SIZE_BUF_RX_SPI)
-					{
-						rxIndex = 0; //break;
-					}
-				
-		
-
-				while ((SPI2->SR & SPI_SR_RXNE))
-				{
-					dataBufTxSPI[rxIndex++] = SPI1->DR;
-					if(rxIndex >= SIZE_BUF_RX_SPI)
-					{
-						rxIndex = 0; break;
-					}
-				}
-				
-		
-//		
-    return dataBufTxSPI;
+    while (!(SPI2->SR & SPI_SR_RXNE))
+    {}
+    return SPI2->DR;
 }
 
 

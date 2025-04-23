@@ -33,7 +33,7 @@ void Config_USART1(uint16_t baudRate)
 
     USART1->CR1 |= 1 << USART_CR1_TE_Pos; // Включить TX
     USART1->CR1 |= 1 << USART_CR1_RE_Pos; // Включить RX
-		//USART1->CR2 |= 2 << USART_CR2_STOP_Pos;//Установили STOP бит
+		USART1->CR2 |= 2 << USART_CR2_STOP_Pos;//Установили STOP бит
    	USART1->CR1 |= 1 << USART_CR1_RXNEIE_Pos; // Включить прерывание
 //    USART1->CR3 |= 1 << USART_CR3_DMAR_Pos;
 //    USART1->CR3 |= 1 << USART_CR3_DMAT_Pos;
@@ -43,29 +43,33 @@ void Config_USART1(uint16_t baudRate)
 		NVIC_EnableIRQ(USART1_IRQn); // Разрешить прерывания для USART2
 }
 
-void USART1_ReadString(char *data)//считываем регистр 
+void USART1_ReadString(char *data, uint8_t size_buf)//считываем регистр 
 {
-	for(int i=0; i < SIZE_BUF_RX_USART; i++)
-	{	
+	for(int i=0; i < size_buf; i++)
+	{
 		while (!(USART1->SR & USART_SR_RXNE))
 		{};
+			
   	uint8_t temp = USART1->DR;
-
+		USART1->CR1 |= 0 << USART_CR1_RXNEIE_Pos; 
+			
 		data[i]= temp;
+
 	}
 }
 
 void USART1_SetString(char* str)//Установка строки по символьно
 {
-		int size = strlen(str);
-		
-		for(int i=0; i<size;i++)
-		{
+	uint8_t size = strlen(str);
+	
+	for(int i=0; i < size; i++)
+	{
+			USART1->DR = str[i];
+			
 			while (!(USART1->SR & USART_SR_TXE))//Проверим окончание передачи
 			{
-				
-			}
-			USART1->DR = str[i];
-		}
+			};
+	}
+
 }
 

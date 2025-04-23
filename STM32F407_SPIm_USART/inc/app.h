@@ -7,9 +7,9 @@
 #include "init_USART.h"
 
 #define BAUND_RATE 9600
-#define SIZESTR 100
+//#define SIZESTR 100
 
-static char* set_infoStr="Out console in STM32F103 SPI: ";
+
 
 void ExecutorTerminal(void);
 

@@ -58,7 +58,7 @@ void Config_SPI1()
 		//SPI1->CR2 |=SPI_CR2_TXDMAEN;//переключили дма на spi - передача, DMAT = Tx
 		//SPI1->CR2 |=SPI_CR2_RXDMAEN;//переключили дма на spi - чтение, DMAR = Rx
 		
-		SPI1->CR2 = SPI_CR2_RXNEIE;// | SPI_CR2_TXEIE;
+		//SPI1->CR2 = SPI_CR2_RXNEIE;// | SPI_CR2_TXEIE;
 		//SPI1->CR2 = SPI_CR2_TXEIE;// | SPI_CR2_TXEIE;
 		NVIC_EnableIRQ(SPI1_IRQn); // Включаем прерывание SPI2
 		
@@ -67,70 +67,77 @@ void Config_SPI1()
 }
 
 //////////////
-void SPI1_ReadString(char *data)//считываем регистр 
-{
-//	for(int i=0; i < SIZE_BUF_RX_SPI; i++)
-//	{	
-		while (!(SPI1->SR & SPI_SR_RXNE))
-		{};
-  	uint8_t temp = SPI1->DR;
+//void SPI1_ReadString(char *data)//считываем регистр 
+//{
+////	for(int i=0; i < SIZE_BUF_RX_SPI; i++)
+////	{	
+//		while (!(SPI1->SR & SPI_SR_RXNE))
+//		{};
+//  	uint8_t temp = SPI1->DR;
 
-		data[0]= temp;
-//	}
+//		data[0]= temp;
+////	}
+//}
+////
+uint8_t SPI1_ReadBayt()//считываем регистр 
+{
+		uint8_t temp_bayt;
+	
+		if(SPI1->SR & SPI_SR_RXNE)
+		{
+			temp_bayt=SPI1->DR;
+		}
+	
+  	return temp_bayt;
 }
 
-void SPI1_SetString(char* str)//Установка строки по символьно
+
+
+//void SPI1_SetString(char* str)//Установка строки по символьно
+//{
+//		int size = strlen(str);
+//		
+////		for(int i=0; i<size;i++)
+////		{
+//			while (!(SPI1->SR & SPI_SR_TXE))//Проверим окончание передачи
+//			{
+//			}
+//			SPI1->DR = str[0];
+////		}
+//}
+
+void SPI1_SetBayt(uint8_t byte)//Установка строки по символьно
 {
-		int size = strlen(str);
-		
-//		for(int i=0; i<size;i++)
-//		{
-			while (!(SPI1->SR & SPI_SR_TXE))//Проверим окончание передачи
-			{
-			}
-			SPI1->DR = str[0];
-//		}
+	  SPI1->DR = byte; //Записываем новое значение в DR
+	
+    while (!(SPI1->SR & SPI_SR_TXE))
+    {
+			while(SPI1->SR & SPI_SR_BSY)
+			{};
+		};
+		//SPI2->CR2 &= ~(1<<SPI_CR2_TXEIE_Pos);
 }
 
 //////////////
-uint8_t SPI_TransmitReceive(char *data)
+uint8_t SPI_TransmitReceive()
 {
-	uint8_t data1;
+	uint8_t data;
 
-//		if(SPI1->SR & SPI_SR_RXNE)
-//		{
-
-	for(int i=0; i < SIZE_BUF_RX_SPI; i++)
-	{	
-		while (!(SPI1->SR & SPI_SR_RXNE))
-		{};
-  	uint8_t temp = SPI1->DR;
-
-		data[i]= temp;
-	}
-			
-	//delay_ms(1000);
-//			while (!(SPI1->SR & SPI_SR_TXE)); // Ждём, пока TXE станет 1
-//			SPI1->DR = data[0];  
-//			return SPI1->DR;
-			
-		for(int i=0; i< SIZE_BUF_RX_SPI;i++)
+		if(SPI1->SR & SPI_SR_RXNE)
 		{
-			while (!(SPI1->SR & SPI_SR_TXE))//Проверим окончание передачи
-			{
-			};
-			
-			SPI1->DR = data[i];
-			
+					data=SPI1->DR;
+			    while (!(SPI1->SR & SPI_SR_TXE))
+					{
+						while(SPI1->SR & SPI_SR_BSY)
+						{};
+					};						// Ждём, пока TXE станет 1
+					SPI1->DR = data;  
+					
+			return SPI1->DR;
 		}
-		return SPI1->DR;
-			
-			
-			
-//		}
-//		else
-//		{
-//			return SPI1->DR;
-//		}
+		else
+		{
+			return SPI1->DR;
+		}
 }
 

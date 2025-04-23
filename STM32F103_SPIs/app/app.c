@@ -30,59 +30,62 @@ void SPI1_IRQHandler(void)
 //        SPI1->DR = receivedStringSPI[txIndex++];
 //        if(txIndex >= SIZE_REVERC_DATA) txIndex = 0;
 //			}
-				  //Ждем, пока SPI освободится от предыдущей передачи
-
-//	if (SPI1->SR & SPI_SR_RXNE)
-//	{
-				while ((SPI1->SR & SPI_SR_RXNE))
-				{
-					receivedStringSPI[rxIndex] = SPI1->DR;
-					rxIndex++;
-					if(rxIndex >= 5)
-					{
-						rxIndex = 0; //break;
-						SPI1->CR2 &= ~SPI_CR2_RXNEIE;
-					}
-				};
-
-//				};
-				////
-				tst=receivedStringSPI[0];
-				tst1=receivedStringSPI[1];
-				tst2=receivedStringSPI[2];
-				tst3=receivedStringSPI[3];
-				tst4=receivedStringSPI[4];
-				
-				
-//	}
 	
-//		if (SPI1->SR & SPI_SR_TXE)
-//	{
-////				while ((SPI1->SR & SPI_SR_TXE))//Проверим окончание передачи
-////				{
-//					SPI1->DR = receivedStringSPI[rxIndex++];
-//					if(rxIndex >= SIZE_REVERC_DATA)
+	
+	
+//				  //Ждем, пока SPI освободится от предыдущей передачи
+
+////	if (SPI1->SR & SPI_SR_RXNE)
+////	{
+//				while ((SPI1->SR & SPI_SR_RXNE))
+//				{
+//					receivedStringSPI[rxIndex] = SPI1->DR;
+//					rxIndex++;
+//					if(rxIndex >= 5)
 //					{
 //						rxIndex = 0; //break;
+//						SPI1->CR2 &= ~SPI_CR2_RXNEIE;
 //					}
+//				};
+
 ////				};
-//	}
+//				////
+//				tst=receivedStringSPI[0];
+//				tst1=receivedStringSPI[1];
+//				tst2=receivedStringSPI[2];
+//				tst3=receivedStringSPI[3];
+//				tst4=receivedStringSPI[4];
+//				
+//				
+////	}
+//	
+////		if (SPI1->SR & SPI_SR_TXE)
+////	{
+//////				while ((SPI1->SR & SPI_SR_TXE))//Проверим окончание передачи
+//////				{
+////					SPI1->DR = receivedStringSPI[rxIndex++];
+////					if(rxIndex >= SIZE_REVERC_DATA)
+////					{
+////						rxIndex = 0; //break;
+////					}
+//////				};
+////	}
 	
 }
-	
-	
-	
-
-
 
 int main()
 {
 	Init_LED();
 	Init_SPI();
-
+  tst1=0x01;
+	
 	while(1)
 	{
-		//tst = SPI_TransmitReceive(receivedStringSPI);	
+		tst=0;
+		tst=SPI1_ReadBayt();
+		tst3=tst;
+		SPI1_SetBayt(tst3);
+		//tst = SPI_TransmitReceive();	
 		//SPI1_SetString(receivedStringSPI);
 	}
 	return 0;

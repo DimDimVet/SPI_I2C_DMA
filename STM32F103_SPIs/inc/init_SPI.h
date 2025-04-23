@@ -15,9 +15,11 @@ void Enable_RCC_SPI1(void);//прерывание
 void Config_GPIO_SPI1(void);//порты spi
 void Config_SPI1(void);//spi
 
-void SPI1_ReadString(char *data);
-void SPI1_SetString(char* str);
+//void SPI1_ReadString(char *data);
+uint8_t SPI1_ReadBayt();
+//void SPI1_SetString(char* str);
+void SPI1_SetBayt(uint8_t byte);
 
-uint8_t SPI_TransmitReceive(char *data);
+uint8_t SPI_TransmitReceive(void);
 
 #endif
