@@ -58,7 +58,7 @@ void Config_SPI1()
 		//SPI1->CR2 |=SPI_CR2_TXDMAEN;//переключили дма на spi - передача, DMAT = Tx
 		//SPI1->CR2 |=SPI_CR2_RXDMAEN;//переключили дма на spi - чтение, DMAR = Rx
 		
-		//SPI1->CR2 = SPI_CR2_RXNEIE;// | SPI_CR2_TXEIE;
+		SPI1->CR2 = SPI_CR2_RXNEIE;// | SPI_CR2_TXEIE;
 		//SPI1->CR2 = SPI_CR2_TXEIE;// | SPI_CR2_TXEIE;
 		NVIC_EnableIRQ(SPI1_IRQn); // Включаем прерывание SPI2
 		
@@ -67,18 +67,6 @@ void Config_SPI1()
 }
 
 //////////////
-//void SPI1_ReadString(char *data)//считываем регистр 
-//{
-////	for(int i=0; i < SIZE_BUF_RX_SPI; i++)
-////	{	
-//		while (!(SPI1->SR & SPI_SR_RXNE))
-//		{};
-//  	uint8_t temp = SPI1->DR;
-
-//		data[0]= temp;
-////	}
-//}
-////
 uint8_t SPI1_ReadBayt()//считываем регистр 
 {
 		uint8_t temp_bayt;
@@ -90,21 +78,6 @@ uint8_t SPI1_ReadBayt()//считываем регистр
 	
   	return temp_bayt;
 }
-
-
-
-//void SPI1_SetString(char* str)//Установка строки по символьно
-//{
-//		int size = strlen(str);
-//		
-////		for(int i=0; i<size;i++)
-////		{
-//			while (!(SPI1->SR & SPI_SR_TXE))//Проверим окончание передачи
-//			{
-//			}
-//			SPI1->DR = str[0];
-////		}
-//}
 
 void SPI1_SetBayt(uint8_t byte)//Установка строки по символьно
 {

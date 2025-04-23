@@ -13,18 +13,17 @@ void Enable_RCC_LED(void)
 
 void Config_LED(void)
 {
-    GPIOA->MODER |= 0 << GPIO_MODER_MODER6_Pos;// сброс
-    GPIOA->MODER |= 1 << GPIO_MODER_MODER6_Pos;//режим на выход
-    GPIOA->OSPEEDR |= 0 << GPIO_OSPEEDR_OSPEED6_Pos;//малая скорость
-    GPIOA->PUPDR |= 1 << GPIO_PUPDR_PUPD6_Pos;// установка подтяжки к + (1)
-    GPIOA->OTYPER |= 1 << GPIO_OTYPER_OT6_Pos;//Выход с открытым стоком
+    GPIOA->MODER |= 0 << GPIO_MODER_MODER6_Pos;      // сброс
+    GPIOA->MODER |= 1 << GPIO_MODER_MODER6_Pos;      // режим на выход
+    GPIOA->OSPEEDR |= 0 << GPIO_OSPEEDR_OSPEED6_Pos; // малая скорость
+    GPIOA->PUPDR |= 1 << GPIO_PUPDR_PUPD6_Pos;       // установка подтяжки к + (1)
+    GPIOA->OTYPER |= 1 << GPIO_OTYPER_OT6_Pos;       // Выход с открытым стоком
 
-    GPIOA->MODER |= 0 << GPIO_MODER_MODER7_Pos;// сброс
-    GPIOA->MODER |= 1 << GPIO_MODER_MODER7_Pos;//режим на выход
-    GPIOA->OSPEEDR |= 0 << GPIO_OSPEEDR_OSPEED7_Pos;//малая скорость
-    GPIOA->PUPDR |= 1 << GPIO_PUPDR_PUPD7_Pos;// установка подтяжки к + (1)
-    GPIOA->OTYPER |= 1 << GPIO_OTYPER_OT7_Pos;//Выход с открытым стоком
-
+    GPIOA->MODER |= 0 << GPIO_MODER_MODER7_Pos;      // сброс
+    GPIOA->MODER |= 1 << GPIO_MODER_MODER7_Pos;      // режим на выход
+    GPIOA->OSPEEDR |= 0 << GPIO_OSPEEDR_OSPEED7_Pos; // малая скорость
+    GPIOA->PUPDR |= 1 << GPIO_PUPDR_PUPD7_Pos;       // установка подтяжки к + (1)
+    GPIOA->OTYPER |= 1 << GPIO_OTYPER_OT7_Pos;       // Выход с открытым стоком
 }
 
 void LED7(void)

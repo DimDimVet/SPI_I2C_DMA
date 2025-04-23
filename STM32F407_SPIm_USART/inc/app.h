@@ -7,10 +7,6 @@
 #include "init_USART.h"
 
 #define BAUND_RATE 9600
-//#define SIZESTR 100
 
-
-
-void ExecutorTerminal(void);
 
 #endif
