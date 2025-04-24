@@ -1,10 +1,5 @@
 #include "init_SPI.h"
 
-// volatile uint8_t rxIndex = 0;
-// volatile uint8_t txIndex = 0;
-
-// uint8_t flag=1;
-
 void Init_SPI(void)
 {
     Enable_RCC_SPI1();
@@ -16,7 +11,7 @@ void Enable_RCC_SPI1(void)
 {
     RCC->AHB1ENR |= 1 << RCC_AHB1ENR_GPIOBEN_Pos; // Включаем тактирование порта B
     RCC->APB1ENR |= 1 << RCC_APB1ENR_SPI2EN_Pos;  // Включаем тактирование SPI2
-    RCC->AHB1ENR |= 1 << RCC_AHB1ENR_DMA1EN_Pos;  // Включаем тактирование DMA1
+    // RCC->AHB1ENR |= 1 << RCC_AHB1ENR_DMA1EN_Pos;  // Включаем тактирование DMA1
 }
 
 void Config_GPIO_SPI1(void)
@@ -58,8 +53,8 @@ void Config_SPI1(void)
     SPI2->CR2 = 0;
     // SPI2->CR2 |= 1 << SPI_CR2_RXDMAEN_Pos;// Включаем DMA
     // SPI2->CR2 |= 1 << SPI_CR2_TXDMAEN_Pos;// Включаем DMA
-    SPI2->CR2 = SPI_CR2_RXNEIE;// | SPI_CR2_TXEIE;
-    NVIC_EnableIRQ(SPI2_IRQn); // Включаем прерывание SPI2
+    SPI2->CR2 = SPI_CR2_RXNEIE; // | SPI_CR2_TXEIE;
+    NVIC_EnableIRQ(SPI2_IRQn);  // Включаем прерывание SPI2
 
     SPI2->CR1 |= 1 << SPI_CR1_SPE_Pos; // Вкл SPI
 }
@@ -67,10 +62,10 @@ void Config_SPI1(void)
 // IRQ
 void SPI2_IRQHandler(void)
 {
-
 }
+
 ////
-uint8_t SPI2_ReadBayt() // считываем регистр
+uint8_t SPI2_ReadBayt()
 {
     uint8_t temp_bayt;
 
@@ -82,9 +77,9 @@ uint8_t SPI2_ReadBayt() // считываем регистр
     return temp_bayt;
 }
 
-uint8_t SPI2_SetBayt(uint8_t byte) // Установка строки по символьно
+uint8_t SPI2_SetBayt(uint8_t byte)
 {
-    SPI2->DR = byte; // Записываем новое значение в DR
+    SPI2->DR = byte;
     while (!(SPI2->SR & SPI_SR_TXE))
     {
         while (SPI2->SR & SPI_SR_BSY)
@@ -92,35 +87,8 @@ uint8_t SPI2_SetBayt(uint8_t byte) // Установка строки по си�
         };
     };
     return 1;
-    // SPI2->CR2 &= ~(1<<SPI_CR2_TXEIE_Pos);
 }
 
-// void SPI2_Tx()
-//{
-//		  //Ждем, пока SPI освободится от предыдущей передачи
-//		while(SPI2->SR & SPI_SR_BSY)
-//     {};
-//
-//		//Разрешаем прерывание TXEIE И запускаем обмен
-//		SPI2->CR2 |= (1<<SPI_CR2_TXEIE_Pos);
-
-//}
-
-///////////////////////
-// uint32_t SPI2_TransmitReceive(uint8_t data)
-//{
-//     while (!(SPI2->SR & SPI_SR_TXE))
-//     {};
-//     SPI2->DR = data;
-//
-//		delay_ms(100);
-//
-//     while (!(SPI2->SR & SPI_SR_RXNE))
-//     {}
-//     return SPI2->DR;
-// }
-
-///////////////////////
 uint8_t SPI2_TransmitReceive(uint8_t data)
 {
     while (!(SPI2->SR & SPI_SR_TXE))

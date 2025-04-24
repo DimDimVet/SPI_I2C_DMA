@@ -11,7 +11,6 @@
 #define SIZE_BUF_USART_MAX 100
 #define SIZE_BUF_INFO 35
 
-
 void Init_USART1(uint16_t baudRate);
 void Enable_RCC_USART1(void);
 void Config_GPIO_USART1(void);

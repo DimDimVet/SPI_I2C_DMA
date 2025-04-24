@@ -8,5 +8,4 @@
 
 #define BAUND_RATE 9600
 
-
 #endif
