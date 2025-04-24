@@ -1,11 +1,9 @@
 #include "init_SPI.h"
 
-char set_infoStr[SIZE_BUF_SPI] = "F103 SPI";
+int countSPI=0;
+char set_infoStr[SIZE_BUF_SPI] = "F103";
 uint8_t dataBufSPI_[SIZE_BUF_SPI];
 uint8_t *dataBufSPI=dataBufSPI_;
-int countSPI=0;
-
-
 
 void Init_SPI()
 {
@@ -123,19 +121,25 @@ uint8_t SPI_TransmitReceive()
 /////IRQ
 void SPI1_IRQHandler(void)
 {
-	if((countSPI >= 5))
-	{
-		for (int i = 0; i < 5; i++)
-		{
-			SPI1_SetBayt(set_infoStr[i]);
-			//SPI1_SetBayt(dataBufSPI[i]);
-		}	
-		countSPI=0;
-	}	
-	else
-	{
-		dataBufSPI[countSPI]=SPI1_ReadBayt();
-		countSPI++;	
-	}
+	uint8_t data;
+	
+	data=SPI1_ReadBayt();
+	
+	SPI1_SetBayt(data);
+
+//	if((countSPI >= SIZE_BUF_SPI))
+//	{
+//		for (int i = 0; i < SIZE_BUF_SPI; i++)
+//		{
+//			//SPI1_SetBayt(set_infoStr[i]);
+//			SPI1_SetBayt(dataBufSPI[i]);
+//		}	
+//		countSPI=0;
+//	}	
+//	else
+//	{
+//		dataBufSPI[countSPI]=SPI1_ReadBayt();
+//		countSPI++;	
+//	}
 
 }

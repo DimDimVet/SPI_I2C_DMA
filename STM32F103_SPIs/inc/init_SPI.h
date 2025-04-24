@@ -6,10 +6,7 @@
 #include "stm32f10x.h"
 #include "delay.h"
 
-#define SIZE_BUF_SPI 10
-
-//static uint8_t dataBufSPI[SIZE_BUF_SPI];
-//static uint8_t countSPI=0;
+#define SIZE_BUF_SPI 5
 
 void Init_SPI(void);         // config spi
 void Enable_RCC_SPI1(void);  // прерывание
