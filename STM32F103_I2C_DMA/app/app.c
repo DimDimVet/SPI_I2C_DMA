@@ -133,14 +133,14 @@ int main()
             Error_Handler();
         }
 
-				delay_us(100);
+				//delay_us(100);
 					
         if(I2C_Slave_Transmit(dataToSend, 2)!= 0)
         {
             Error_Handler();
         }
 				
-				delay_us(100);	
+				delay_ms(100);
 	}
 	return 0;
 }

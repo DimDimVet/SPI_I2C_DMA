@@ -444,26 +444,26 @@ int main()
     while(1)
     {
 
-//        while (HAL_I2C_Master_TransmitT(I2C_ADDRESS, dataToSend, 2) != 0)
-//        {
-//            Error_Handler();
-//        }
-
-//        //старт приема
-//        while(HAL_I2C_Master_ReceiveT(I2C_ADDRESS, receivedData, 2) != 0)
-//        {
-//            Error_Handler();
-//        }
+        while (HAL_I2C_Master_TransmitT(I2C_ADDRESS, dataToSend, 2) != 0)
+        {
+            Error_Handler();
+        }
+				delay_us(100);
+        //старт приема
+        while(HAL_I2C_Master_ReceiveT(I2C_ADDRESS, receivedData, 2) != 0)
+        {
+            Error_Handler();
+        }
 			
-			while (I2C_DMA_TransmitReceive1(I2C_ADDRESS,dataToSend,2) != 0)
-       {
-            Error_Handler();
-       }
-			 
-		  while (Read_I2C_DMA1(I2C_ADDRESS, receivedData, 2) != 0)
-       {
-            Error_Handler();
-       }
+//			while (I2C_DMA_TransmitReceive1(I2C_ADDRESS,dataToSend,2) != 0)
+//       {
+//            Error_Handler();
+//       }
+//			 
+//		  while (Read_I2C_DMA1(I2C_ADDRESS, receivedData, 2) != 0)
+//       {
+//            Error_Handler();
+//       }
 
         delay_ms(1000);
     }

@@ -7,7 +7,6 @@ void Init_I2C()
     Enable_RCC_I2C();
     Config_GPIO_I2C();
     Config_I2C();
-    //Config_SPI1_DMA1();
 }
 
 void Enable_RCC_I2C(void)
@@ -15,7 +14,6 @@ void Enable_RCC_I2C(void)
     RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;//тактирование GPIOA
     RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;
     RCC->APB1ENR |= RCC_APB1ENR_I2C1EN;//тактирование
-    //RCC->AHBENR |= RCC_AHBENR_DMA1EN;   // Включаем DMA1
 }
 
 void Config_GPIO_I2C()
@@ -31,7 +29,53 @@ void Config_GPIO_I2C()
     GPIOB->CRL |= (GPIO_CRL_CNF7_0 | GPIO_CRL_CNF7_1); // PB7 alt
 }
 
-uint32_t I2C_SPEED(uint32_t pclk, uint32_t speed, uint32_t dutyCycle)
+void Config_I2C()
+{
+    uint32_t pclk1;
+    uint32_t freqrange;
+
+// Настройка I2C (100kHz)
+
+    pclk1 = RCC_GetPCLK1Freq();
+    //pclk1 = 0x00F42400;
+
+    //freqrange = I2C_FREQRANGE(pclk1);
+    freqrange = pclk1/1000000;//0x00000010;
+
+    /* Configure I2Cx: Frequency range */
+    I2C1->CR2|=I2C_CR2_FREQ_1;
+
+    //MODIFY_REG(I2C1->TRISE, I2C_TRISE_TRISE, I2C_RISE_TIME(freqrange, ClockSpeed));
+    I2C1->TRISE|=I2C_Rise_Time(freqrange, CLOCK_SPEED);
+
+    //MODIFY_REG(I2C1->CCR, (I2C_CCR_FS | I2C_CCR_DUTY | I2C_CCR_CCR), I2C_SPEED(pclk1, ClockSpeed, I2C_DUTYCYCLE_2));
+    I2C1->CCR|= I2C_Speed(pclk1, CLOCK_SPEED, 0);
+   
+    //MODIFY_REG(I2C1->CR1, (I2C_CR1_ENGC | I2C_CR1_NOSTRETCH), (I2C_GENERALCALL_DISABLE | I2C_NOSTRETCH_DISABLE));
+    I2C1->CR1|= (0|0);
+
+    //MODIFY_REG(I2C1->OAR1, (I2C_OAR1_ADDMODE | I2C_OAR1_ADD0), (I2C_ADDRESSINGMODE_7BIT | SLAVE_ADDR));
+    I2C1->OAR1 =SLAVE_ADDR;
+    I2C1->OAR1 &=~I2C_OAR1_ADDMODE;
+
+    //MODIFY_REG(I2C1->OAR2, (I2C_OAR2_ENDUAL | I2C_OAR2_ADD2), (I2C_DUALADDRESS_DISABLE | 0));
+    I2C1->OAR2&=~I2C_OAR2_ENDUAL;
+		
+		//I2C1->CR2 |=1 << I2C_CR2_ITBUFEN_Pos;//буфер прерываний
+		I2C1->CR2 |=I2C_CR2_ITEVTEN;//вкл прерывани
+	
+    I2C1->CR1 |= I2C_CR1_PE;
+
+    NVIC_EnableIRQ(I2C1_EV_IRQn);
+}
+
+uint32_t RCC_GetPCLK1Freq(void)
+{
+	uint32_t temp=SystemCoreClock >> APBPrescTable[(RCC->CFGR & RCC_CFGR_PPRE1)>> 10]; //10U=RCC_CFGR_PPRE1_Pos
+	return temp;
+}
+
+uint32_t I2C_Speed(uint32_t pclk, uint32_t speed, uint32_t dutyCycle)
 {
     uint32_t timing = 0;
 
@@ -49,119 +93,140 @@ uint32_t I2C_SPEED(uint32_t pclk, uint32_t speed, uint32_t dutyCycle)
     return timing;
 }
 
-void Config_I2C()
+uint32_t I2C_Rise_Time(uint32_t freqrange, uint32_t clockSpeed)
 {
-    uint32_t pclk1;
-    uint32_t freqrange;
-
-// Настройка I2C (100kHz)
-
-    //pclk1 = HAL_RCC_GetPCLK1Freq();
-    pclk1 = 0x00F42400;
-
-    //freqrange = I2C_FREQRANGE(pclk1);
-    freqrange = 0x00000010;
-
-    /* Configure I2Cx: Frequency range */
-    I2C1->CR2|=I2C_CR2_FREQ_1;
-
-    //MODIFY_REG(I2C1->TRISE, I2C_TRISE_TRISE, I2C_RISE_TIME(freqrange, ClockSpeed));
-    I2C1->TRISE|=I2C_RISE_TIME(freqrange, CLOCK_SPEED);
-
-    //MODIFY_REG(I2C1->CCR, (I2C_CCR_FS | I2C_CCR_DUTY | I2C_CCR_CCR), I2C_SPEED(pclk1, ClockSpeed, I2C_DUTYCYCLE_2));
-    I2C1->CCR|= I2C_SPEED(pclk1, CLOCK_SPEED, I2C_DUTYCYCLE_2);
-   
-    //MODIFY_REG(I2C1->CR1, (I2C_CR1_ENGC | I2C_CR1_NOSTRETCH), (I2C_GENERALCALL_DISABLE | I2C_NOSTRETCH_DISABLE));
-    I2C1->CR1|= (0|0);
-
-    //MODIFY_REG(I2C1->OAR1, (I2C_OAR1_ADDMODE | I2C_OAR1_ADD0), (I2C_ADDRESSINGMODE_7BIT | SLAVE_ADDR));
-    I2C1->OAR1 =SLAVE_ADDR;
-    I2C1->OAR1 &=~I2C_OAR1_ADDMODE;
-
-    //MODIFY_REG(I2C1->OAR2, (I2C_OAR2_ENDUAL | I2C_OAR2_ADD2), (I2C_DUALADDRESS_DISABLE | 0));
-    I2C1->OAR2&=~I2C_OAR2_ENDUAL;
-
-    I2C1->CR1 |= I2C_CR1_PE;
-
-    NVIC_EnableIRQ(I2C1_EV_IRQn);
-    NVIC_EnableIRQ(I2C1_ER_IRQn);
-
+		if(clockSpeed <= 100000)
+		{
+			freqrange=freqrange+1;
+		}
+		else
+		{
+			freqrange=((freqrange * 300) / 1000)+1;
+		}
+		return freqrange;
 }
 
-void Config_SPI1_DMA1()
+uint8_t I2C_AdresSetTime()
 {
-//Channel 2 SPI1_RX, Channel 3 SPI1_TX
-
-    DMA1_Channel3->CCR |=0;
-    DMA1_Channel3->CCR &= ~DMA_CCR3_MEM2MEM;//режим памяти в память
-    DMA1_Channel3->CCR &= ~DMA_CCR3_PL;//уровень приоритета канала
-    DMA1_Channel3->CCR &= ~DMA_CCR3_MSIZE_0;//размер памяти
-    DMA1_Channel3->CCR &= ~DMA_CCR3_MSIZE_1;
-    DMA1_Channel3->CCR &= ~DMA_CCR3_PSIZE_0;//размер периферии
-    DMA1_Channel3->CCR &= ~DMA_CCR3_PSIZE_1;
-    DMA1_Channel3->CCR |= DMA_CCR3_MINC;//Режим приращения памяти
-    DMA1_Channel3->CCR &= ~DMA_CCR3_PINC;//Режим периферийного приращения
-    DMA1_Channel3->CCR &= ~DMA_CCR3_CIRC;//Кольцевой режим
-    DMA1_Channel3->CCR |= DMA_CCR3_DIR;//Направление передачи данных
-    DMA1_Channel3->CCR |= DMA_CCR3_TCIE;//разрешение прерывания по завершению передачи
-    DMA1_Channel3->CPAR = (uint32_t)(&SPI1->DR); //Адрес регистра данных spi
-    DMA1_Channel3->CNDTR = 0; //размер массива
-    DMA1_Channel3->CMAR = 0; //Адрес буфера
-    DMA1_Channel3->CCR |= DMA_CCR3_EN; // Включение канала DMA
-
-    DMA1_Channel2->CCR |=0;
-    DMA1_Channel2->CCR &= ~DMA_CCR2_MEM2MEM;//режим памяти в память
-    DMA1_Channel2->CCR &= ~DMA_CCR2_PL;//уровень приоритета канала
-    DMA1_Channel2->CCR |= DMA_CCR2_MSIZE_0;//размер памяти
-    DMA1_Channel2->CCR |= DMA_CCR2_MSIZE_1;
-    DMA1_Channel2->CCR |= DMA_CCR2_PSIZE_0;//размер периферии
-    DMA1_Channel2->CCR |= DMA_CCR2_PSIZE_1;
-    DMA1_Channel2->CCR |= DMA_CCR2_MINC;//Режим приращения памяти
-    DMA1_Channel2->CCR |= DMA_CCR2_PINC;//Режим периферийного приращения
-    DMA1_Channel2->CCR |= DMA_CCR2_CIRC;//Кольцевой режим
-    DMA1_Channel2->CCR &= ~DMA_CCR2_DIR;//Направление передачи данных
-    DMA1_Channel2->CCR |= DMA_CCR2_TCIE;//разрешение прерывания по завершению передачи
-    DMA1_Channel2->CPAR = (uint32_t)(&SPI1->DR); //Адрес регистра данных spi
-    DMA1_Channel2->CNDTR = SIZE_BUF; //размер массива
-    DMA1_Channel2->CMAR = (uint32_t)dataBufRxSPI; //Адрес буфера
-    DMA1_Channel2->CCR |= DMA_CCR2_EN; // Включение канала DMA
-
-    DMA1->IFCR |= DMA_IFCR_CTCIF3;
-    DMA1->IFCR |= DMA_IFCR_CTCIF2;
-
-    NVIC_EnableIRQ(DMA1_Channel3_IRQn); // Включение прерываний DMA
-    NVIC_EnableIRQ(DMA1_Channel2_IRQn); // Включение прерываний DMA
-
+  //ждем адрес
+  while (!(I2C1->SR1 & I2C_SR1_ADDR))
+  {
+  }
+  return 0;
 }
 
-//////////////
-uint8_t SPI_TransmitReceive(uint8_t data)
+uint8_t I2C_RX_SetTime()
 {
-    uint8_t data1;
+	//ждем прием данных
+  while (!(I2C1->SR1 & I2C_SR1_RXNE) )
+  {
+  }
+  return 0;
+}
 
-    if(SPI1->SR & SPI_SR_RXNE)
+uint8_t I2C_TX_SetTime()
+{
+	//ждем передачу данных
+  while (!(I2C1->SR1 & I2C_SR1_TXE) )
+  {
+  }
+  return 0;
+}
+
+///////////////////////
+uint8_t I2C_Slave_Receive(uint8_t *pData, uint16_t Size)
+{
+	//откл POS
+		I2C1->CR1 &=~I2C_CR1_POS;
+	//вкл проверку адреса
+		I2C1->CR1 |=I2C_CR1_ACK;
+		
+  //проверим адрес
+	if (I2C_AdresSetTime() != 0)
     {
-        data1=SPI1->DR;
-        while (!(SPI1->SR & SPI_SR_TXE)); // Ждём, пока TXE станет 1
-        SPI1->DR = data1;
-        return SPI1->DR;
+      return 1;
     }
-    else
+		
+	//сброс флага адреса
+		I2C1->SR2;	
+		
+		while (Size > 0)//крутим
     {
-        return SPI1->DR;
+      //проверим данные
+      if (I2C_RX_SetTime() != 0)
+      {
+        //откл проверку адреса
+				I2C1->CR1 &=~I2C_CR1_ACK;
+        return 1;
+      }
+
+      //читаем данные
+      *pData = (uint8_t)I2C1->DR;
+      pData++;
+      Size--;
+    }
+
+		//сброс флага
+		I2C1->SR1;
+		
+    //откл проверку адреса
+		I2C1->CR1 &=~I2C_CR1_ACK;
+		
+		return 0;
+}
+////////////////////
+uint8_t I2C_Slave_Transmit(uint8_t *pData, uint16_t Size)
+{
+	//откл POS
+		I2C1->CR1 &=~I2C_CR1_POS;
+	//вкл проверку адреса
+		I2C1->CR1 |=I2C_CR1_ACK;
+
+  //проверим адрес
+	if (I2C_AdresSetTime() != 0)
+    {
+      return 1;
+    }
+		
+	//сброс флага адреса
+		I2C1->SR2;
+
+    while (Size > 0U)//крутим
+    {
+      //проверим данные
+      if (I2C_TX_SetTime() != 0)
+      {
+        //откл проверку адреса
+				I2C1->CR1 &=~I2C_CR1_ACK;
+        return 1;
+      }
+
+      //запишем данные
+      I2C1->DR = *pData;
+      pData++;
+      Size--;
+    }
+
+		//сброс флага
+		I2C1->SR1;
+
+    //откл проверку адреса
+		I2C1->CR1 &=~I2C_CR1_ACK;
+
+    return 0;
+}
+
+////IRQ
+void Error_Handler(void)
+{
+    __disable_irq();
+    while (1)
+    {
     }
 }
 
-char* Read_SPI1_DMA1()
+void I2C1_EV_IRQHandler(void)
 {
-    return dataBufRxSPI;
-}
-
-
-void SPI1_DMA1_TransmitReceive(char *str_data)
-{
-    DMA1_Channel3->CCR &= ~DMA_CCR3_EN;
-    DMA1_Channel3->CNDTR = SIZE_BUF;
-    DMA1_Channel3->CMAR = (uint32_t)str_data; // Указание адреса буфера передачи
-    DMA1_Channel3->CCR |= DMA_CCR3_EN;     // Включаем DMA
+	__disable_irq();
+	LED13();
 }

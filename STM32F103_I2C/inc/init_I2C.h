@@ -4,27 +4,30 @@
 #include <stdio.h>
 #include <string.h>
 #include "stm32f10x.h" 
+#include "init_LED.h"
 
 #define SIZE_BUF 10
 #define CLOCK_SPEED  100000
 #define TICK_FREQ_1KHZ 1U
 #define SLAVE_ADDR  0x68
 
-#define I2C_RISE_TIME(__FREQRANGE__, __SPEED__)            (((__SPEED__) <= 100000U) ? ((__FREQRANGE__) + 1U) : ((((__FREQRANGE__) * 300U) / 1000U) + 1U))
-
-#define I2C_DUTYCYCLE_2 0x00000000U																																	
-																																	
+static uint8_t APBPrescTable[8]  = {0, 0, 0, 0, 1, 2, 3, 4};
 
 void Init_I2C(void);
 void Enable_RCC_I2C(void);
 void Config_GPIO_I2C(void);
 void Config_I2C(void);
-//void Config_SPI1_DMA1(void);
 
-uint32_t I2C_SPEED(uint32_t pclk, uint32_t speed, uint32_t dutyCycle);
+uint32_t RCC_GetPCLK1Freq(void);
+uint32_t I2C_Speed(uint32_t pclk, uint32_t speed, uint32_t dutyCycle);
+uint32_t I2C_Rise_Time(uint32_t freqrange, uint32_t clockSpeed);
+uint8_t I2C_AdresSetTime(void);
+uint8_t I2C_RX_SetTime(void);
+uint8_t I2C_TX_SetTime(void);
 
-//uint8_t SPI_TransmitReceive(uint8_t data);
-//void SPI1_DMA1_TransmitReceive(char *str_data);
-//char* Read_SPI1_DMA1();
+uint8_t I2C_Slave_Receive(uint8_t *pData, uint16_t Size);
+uint8_t I2C_Slave_Transmit(uint8_t *pData, uint16_t Size);
+
+void Error_Handler(void);
 
 #endif

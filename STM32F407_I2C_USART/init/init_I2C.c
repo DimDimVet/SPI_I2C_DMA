@@ -36,7 +36,63 @@ void Config_GPIO_I2C()
 	
 }
 
-uint32_t I2C_SPEED(uint32_t pclk, uint32_t speed, uint32_t dutyCycle)
+
+
+
+void Config_I2C()
+{
+	 uint32_t freqrange;
+   uint32_t pclk1;
+	 
+	/*Reset I2C*/
+  I2C1->CR1 =1 << I2C_CR1_SWRST_Pos;
+  I2C1->CR1 =0 << I2C_CR1_SWRST_Pos;
+	
+	  /* Get PCLK1 frequency */
+  pclk1 = RCC_GetPCLK1Freq();
+	//pclk1 =0x00F42400;
+  freqrange = pclk1/1000000;
+	
+  /* Configure I2Cx: Frequency range */
+	I2C1->CR2 |= freqrange << I2C_CR2_FREQ_Pos;
+	
+  /* Configure I2Cx: Rise Time */
+	I2C1->TRISE |= I2C_Rise_Time(freqrange, CLOCK_SPEED) << I2C_TRISE_TRISE_Pos;
+
+  /* Configure I2Cx: Speed */
+ 	I2C1->CCR |= I2C_Speed(pclk1, CLOCK_SPEED, 0);// << (I2C_CCR_FS_Pos | I2C_CCR_DUTY_Pos | I2C_CCR_CCR_Pos);
+
+  /* Configure I2Cx: Generalcall and NoStretch mode */
+	I2C1->CR1 |= (0 | 0) << (I2C_CR1_ENGC_Pos | I2C_CR1_NOSTRETCH_Pos);
+
+  /* Configure I2Cx: Own Address1 and addressing mode */
+	I2C1->OAR1 |= (I2C_ADDRESSINGMODE_7BIT | 0) << (I2C_OAR1_ADDMODE_Pos|I2C_OAR1_ADD0_Pos);
+	
+  /* Configure I2Cx: Dual mode and Own Address2 */
+	I2C1->OAR2 |= (0 | 0) << (I2C_OAR2_ENDUAL_Pos | I2C_OAR2_ADD2_Pos);
+	
+	//I2C1->CR2 |=1 << I2C_CR2_ITBUFEN_Pos;//буфер прерываний
+	I2C1->CR2 |=1 << I2C_CR2_ITEVTEN_Pos;//вкл прерывание
+
+	////I2C1->CR2 |=1 << I2C_CR2_DMAEN_Pos;
+	
+	//I2C1->CR1 |= i2c_;
+	
+  /* Enable the selected I2C peripheral */
+	I2C1->CR1 |= 1<<I2C_CR1_PE_Pos;
+	
+	NVIC_EnableIRQ(I2C1_EV_IRQn);
+
+}
+/////////////
+
+uint32_t RCC_GetPCLK1Freq(void)
+{
+	uint32_t temp=SystemCoreClock >> APBPrescTable[(RCC->CFGR & RCC_CFGR_PPRE1)>> RCC_CFGR_PPRE1_Pos]; //10U=RCC_CFGR_PPRE1_Pos
+	return temp;
+}
+
+uint32_t I2C_Speed(uint32_t pclk, uint32_t speed, uint32_t dutyCycle)
 {
     uint32_t timing = 0;
 
@@ -54,53 +110,19 @@ uint32_t I2C_SPEED(uint32_t pclk, uint32_t speed, uint32_t dutyCycle)
     return timing;
 }
 
-
-void Config_I2C()
+uint32_t I2C_Rise_Time(uint32_t freqrange, uint32_t clockSpeed)
 {
-	 uint32_t freqrange;
-   uint32_t pclk1;
-	 
-	/*Reset I2C*/
-  I2C1->CR1 =1 << I2C_CR1_SWRST_Pos;
-  I2C1->CR1 =0 << I2C_CR1_SWRST_Pos;
-	
-	  /* Get PCLK1 frequency */
-  //pclk1 = HAL_RCC_GetPCLK1Freq();
-	pclk1 =0x00F42400;
-  freqrange = pclk1/1000000;
-	
-  /* Configure I2Cx: Frequency range */
-	I2C1->CR2 |= freqrange << I2C_CR2_FREQ_Pos;
-	
-  /* Configure I2Cx: Rise Time */
-	I2C1->TRISE |= I2C_RISE_TIME(freqrange, CLOCK_SPEED) << I2C_TRISE_TRISE_Pos;
-
-  /* Configure I2Cx: Speed */
- 	I2C1->CCR |= I2C_SPEED(pclk1, CLOCK_SPEED, 0);// << (I2C_CCR_FS_Pos | I2C_CCR_DUTY_Pos | I2C_CCR_CCR_Pos);
-
-  /* Configure I2Cx: Generalcall and NoStretch mode */
-	I2C1->CR1 |= (0 | 0) << (I2C_CR1_ENGC_Pos | I2C_CR1_NOSTRETCH_Pos);
-
-  /* Configure I2Cx: Own Address1 and addressing mode */
-	I2C1->OAR1 |= (I2C_ADDRESSINGMODE_7BIT | 0) << (I2C_OAR1_ADDMODE_Pos|I2C_OAR1_ADD0_Pos);
-	
-  /* Configure I2Cx: Dual mode and Own Address2 */
-	I2C1->OAR2 |= (0 | 0) << (I2C_OAR2_ENDUAL_Pos | I2C_OAR2_ADD2_Pos);
-	
-	I2C1->CR2 |=1 << I2C_CR2_ITBUFEN_Pos;//буфер прерываний
-	I2C1->CR2 |=1 << I2C_CR2_ITEVTEN_Pos;//вкл прерывание
-
-	////I2C1->CR2 |=1 << I2C_CR2_DMAEN_Pos;
-	
-	//I2C1->CR1 |= i2c_;
-	
-  /* Enable the selected I2C peripheral */
-	I2C1->CR1 |= 1<<I2C_CR1_PE_Pos;
-	
-	NVIC_EnableIRQ(I2C1_EV_IRQn);
-
+		if(clockSpeed <= 100000)
+		{
+			freqrange=freqrange+1;
+		}
+		else
+		{
+			freqrange=((freqrange * 300) / 1000)+1;
+		}
+		return freqrange;
 }
-/////////////
+
 uint8_t I2C_AdresSetTime()
 {
     //ждем адрес
@@ -146,7 +168,7 @@ uint8_t I2C_MasterRequestRead(uint16_t DevAddress)
 
     I2C_StartBit_SetTime();
 
-    I2C1->DR =I2C_7BIT_ADD_READ(DevAddress);
+    I2C1->DR  =(uint8_t)(DevAddress | I2C_OAR1_ADD0);  //I2C_7BIT_ADD_READ(DevAddress);
 
     I2C_AdresSetTime();
     return 0;
@@ -159,7 +181,7 @@ uint8_t I2C_MasterRequestWriteT(uint16_t DevAddress)
 
     I2C_StartBit_SetTime();
 
-    I2C1->DR =I2C_7BIT_ADD_WRITE(DevAddress);
+    I2C1->DR =(uint8_t)(DevAddress & (~I2C_OAR1_ADD0));//I2C_7BIT_ADD_WRITE(DevAddress);
 
     I2C_AdresSetTime();
 
@@ -328,6 +350,7 @@ void Error_Handler(void)
 
 void I2C1_EV_IRQHandler(void)
 {
+	__disable_irq();
 	LED6();
 }
 

@@ -17,7 +17,7 @@ int main()
             Error_Handler();
         }
 
-        delay_ms(1000);
+        delay_ms(100);
     }
 
     return 0;
