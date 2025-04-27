@@ -72,7 +72,7 @@ void Config_I2C()
 	I2C1->OAR2 |= (0 | 0) << (I2C_OAR2_ENDUAL_Pos | I2C_OAR2_ADD2_Pos);
 	
 	//I2C1->CR2 |=1 << I2C_CR2_ITBUFEN_Pos;//буфер прерываний
-	I2C1->CR2 |=1 << I2C_CR2_ITEVTEN_Pos;//вкл прерывание
+	//I2C1->CR2 |=1 << I2C_CR2_ITEVTEN_Pos;//вкл прерывание
 
 	////I2C1->CR2 |=1 << I2C_CR2_DMAEN_Pos;
 	

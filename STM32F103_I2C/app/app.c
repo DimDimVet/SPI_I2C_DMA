@@ -19,7 +19,7 @@ int main()
             Error_Handler();
         }
 				
-				delay_ms(100);	
+				//delay_ms(100);	
 	}
 	return 0;
 }
