@@ -80,7 +80,7 @@ void Config_I2C()
 	
   /* Enable the selected I2C peripheral */
 	I2C1->CR1 |= 1<<I2C_CR1_PE_Pos;
-	
+	NVIC_SetPriority(I2C1_EV_IRQn, 1); // Установите приоритет
 	NVIC_EnableIRQ(I2C1_EV_IRQn);
 
 }
@@ -342,15 +342,15 @@ uint8_t I2C_Master_TransmitT(uint16_t DevAddress, uint8_t *pData, uint16_t Size)
 ////IRQ
 void Error_Handler(void)
 {
-    __disable_irq();
-    while (1)
-    {
-    }
+//    __disable_irq();
+//    while (1)
+//    {
+//    }
 }
 
-void I2C1_EV_IRQHandler(void)
-{
-	__disable_irq();
-	LED6();
-}
+//void I2C1_EV_IRQHandler(void)
+//{
+//	__disable_irq();
+//	LED6();
+//}
 

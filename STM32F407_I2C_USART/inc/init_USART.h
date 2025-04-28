@@ -16,8 +16,8 @@ void Enable_RCC_USART1(void);
 void Config_GPIO_USART1(void);
 void Config_USART1(uint16_t baudRate);
 
-void USART1_ReadString(char *data, uint8_t size_buf);
-void USART1_SetString(char *str);
+void USART1_ReadString(uint8_t *data, uint8_t size_buf);
+void USART1_SetString(uint8_t *str);
 
 void ExecutorTerminal_USART_Irq(void);
 #endif

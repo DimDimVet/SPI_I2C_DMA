@@ -39,7 +39,7 @@ void Config_USART1(uint16_t baudRate)
 											  //    USART1->CR3 |= 1 << USART_CR3_DMAT_Pos;
 
 	USART1->CR1 |= 1 << USART_CR1_UE_Pos; // Включить USART1
-
+	NVIC_SetPriority(USART1_IRQn, 2); // Установите приоритет
 	NVIC_EnableIRQ(USART1_IRQn); // Разрешить прерывания для USART2
 }
 
@@ -54,7 +54,7 @@ void USART1_IRQHandler(void)
 }
 ///
 
-void USART1_ReadString(char *data, uint8_t size_buf) // считываем регистр
+void USART1_ReadString(uint8_t *data, uint8_t size_buf) // считываем регистр
 {
 	for (int i = 0; i < size_buf; i++)
 	{
@@ -66,16 +66,16 @@ void USART1_ReadString(char *data, uint8_t size_buf) // считываем ре�
 //		};
 
 		uint8_t temp = USART1->DR;
-		USART1->CR1 |= 0 << USART_CR1_RXNEIE_Pos;
-
 		data[i] = temp;
 	}
 }
 
-void USART1_SetString(char *str) // Установка строки по символьно
+void USART1_SetString(uint8_t *str) // Установка строки по символьно
 {
-	uint8_t size = strlen(str);
-
+	uint8_t size = strlen((char*)str);
+	
+	if(size==0){return;}
+	
 	for (int i = 0; i < size; i++)
 	{
 		USART1->DR = str[i];
