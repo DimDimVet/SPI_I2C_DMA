@@ -31,8 +31,8 @@
 //void MX_GPIO_Init(void);	
 //I2C_HandleTypeDef hi2c1;
 
-uint8_t dataToSend[2] = {0xAA, 0xAF}; // Пример данных для отправки
-uint8_t receivedData[2];
+uint8_t dataToSend[5] = {0xAA, 0xAF, 0xA8, 0xA7, 0xA6}; // Пример данных для отправки
+uint8_t receivedData[5];
 
 
 	uint32_t pclk1;
@@ -170,7 +170,7 @@ int main(void)
 		
     while (1)
     {
-        while(I2C_Slave_Receive(receivedData, 2)!= 0)
+        while(I2C_Slave_Receive(receivedData, 5)!= 0)
         {
             Error_Handler();
         }
@@ -178,7 +178,7 @@ int main(void)
 				for (int i=0; i<1000;i++)
 				{};
 					
-        if(I2C_Slave_Transmit(dataToSend, 2)!= 0)
+        if(I2C_Slave_Transmit(dataToSend, 5)!= 0)
         {
             Error_Handler();
         }

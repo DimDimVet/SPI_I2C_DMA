@@ -1,5 +1,9 @@
 #include "app.h"
 
+
+
+
+
 void ExecutorTerminal_USART_Irq(void)
 {
 
@@ -7,7 +11,7 @@ void ExecutorTerminal_USART_Irq(void)
 
 	__disable_irq();
 
-	while (I2C_Master_TransmitT(I2C_ADDRESS, receivedStringConsole, SIZE_BUF_USART) != 0)
+	while (I2C_Master_TransmitDMA(I2C_ADDRESS, receivedStringConsole, SIZE_BUF_USART) != 0)
 	{
 		Error_Handler();
 	}

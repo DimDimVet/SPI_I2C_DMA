@@ -19,6 +19,7 @@ void Init_I2C(void);
 void Enable_RCC_I2C(void);
 void Config_GPIO_I2C(void);
 void Config_I2C(void);
+void Config_I2C_DMA1(void);
 
 uint32_t RCC_GetPCLK1Freq(void);
 uint32_t I2C_Speed(uint32_t pclk, uint32_t speed, uint32_t dutyCycle);
@@ -35,6 +36,11 @@ uint8_t I2C_BUSYBit_SetTime(void);
 
 uint8_t I2C_Master_ReceiveT(uint16_t DevAddress, uint8_t *pData, uint16_t Size);
 uint8_t I2C_Master_TransmitT(uint16_t DevAddress, uint8_t *pData, uint16_t Size);
+
+uint8_t I2C_Master_TransmitDMA(uint16_t DevAddress, uint8_t *pData, uint16_t Size);
+void Transmit_I2C_DMA(uint8_t *data,uint16_t Size);
+uint8_t * Receive_I2C_DMA();
+
 
 void Error_Handler(void);
 #endif
