@@ -7,7 +7,7 @@ void Init_I2C()
   Enable_RCC_I2C();
   Config_GPIO_I2C();
   Config_I2C();
-	Config_I2C_DMA1();
+	//Config_I2C_DMA1();//ПРОБЛЕМА
 }
 
 void Enable_RCC_I2C()
@@ -67,7 +67,7 @@ void Config_I2C()
   /* Configure I2Cx: Dual mode and Own Address2 */
   I2C1->OAR2 |= (0 | 0) << (I2C_OAR2_ENDUAL_Pos | I2C_OAR2_ADD2_Pos);
 	
-	I2C1->CR2 |=1 << I2C_CR2_DMAEN_Pos;
+	//I2C1->CR2 |=1 << I2C_CR2_DMAEN_Pos;
   /* Enable the selected I2C peripheral */
   I2C1->CR1 |= 1 << I2C_CR1_PE_Pos;
   NVIC_SetPriority(I2C1_EV_IRQn, 1); // Установите приоритет

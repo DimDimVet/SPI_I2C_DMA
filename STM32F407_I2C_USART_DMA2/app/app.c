@@ -2,8 +2,6 @@
 
 
 
-
-
 void ExecutorTerminal_USART_Irq(void)
 {
 
@@ -26,6 +24,8 @@ void ExecutorTerminal_USART_Irq(void)
 	USART1_SetString(rezultRead);
 }
 
+
+
 /////////////////
 
 int main()
@@ -36,6 +36,7 @@ int main()
 
 	while (1)
 	{
+
 	}
 
 	return 0;
