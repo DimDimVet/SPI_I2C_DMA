@@ -7,7 +7,7 @@
 #include "delay.h"
 #include "init_LED.h"
 
-#define SIZE_BUF_USART 5
+#define SIZE_BUF_USART 16
 #define SIZE_BUF_USART_MAX 100
 #define SIZE_BUF_INFO 35
 

@@ -2,7 +2,13 @@
 
 int cou=0;
 uint8_t read[SIZE_BUF_USART];
-uint8_t read1[5];
+uint8_t read2[SIZE_BUF_USART];
+
+uint8_t read1_[SIZE_BUF_USART];
+uint8_t *read1=read1_;
+uint8_t dataDMA_[SIZE_BUF_USART];
+uint8_t *dataDMA=dataDMA_;
+
 uint8_t dataDMARxUSART[SIZE_BUF_USART];
 
 void Init_USART1(uint16_t baudRate)
@@ -40,7 +46,7 @@ void Config_USART1(uint16_t baudRate)
 	USART1->CR1 |= 1 << USART_CR1_TE_Pos;	  // Включить TX
 	USART1->CR1 |= 1 << USART_CR1_RE_Pos;	  // Включить RX
 	USART1->CR2 |= 2 << USART_CR2_STOP_Pos;	  // Установили STOP бит
-	USART1->CR1 |= 1 << USART_CR1_RXNEIE_Pos; // Включить прерывание
+	//USART1->CR1 |= 1 << USART_CR1_RXNEIE_Pos; // Включить прерывание
 	
   USART1->CR3 |= 1 << USART_CR3_DMAR_Pos;
   USART1->CR3 |= 1 << USART_CR3_DMAT_Pos;
@@ -72,7 +78,7 @@ void Config_USART1_DMA2()
     DMA2_Stream7->M0AR = 0;// Адрес буфера
     DMA2_Stream7->CR |= 1 << DMA_SxCR_EN_Pos;//включение потока
 
-    //DMA2_Stream2->CR = 0;
+    DMA2_Stream2->CR = 0;
     DMA2_Stream2->CR |= 4 << DMA_SxCR_CHSEL_Pos;  // Stream 2-Channel 4 USART1_RX
     DMA2_Stream2->CR |= 0 << DMA_SxCR_MBURST_Pos;//Конфигурация передачи пакета памяти
     DMA2_Stream2->CR |= 0 << DMA_SxCR_PBURST_Pos;//Конфигурация периферийной пакетной передачи
@@ -85,7 +91,9 @@ void Config_USART1_DMA2()
     DMA2_Stream2->CR |= 1 << DMA_SxCR_CIRC_Pos;//кольцевой режим
     DMA2_Stream2->CR |= 0 << DMA_SxCR_DIR_Pos;//направление передачи данных 00: периферийное устройство-память 01: память-периферийное устройство
     DMA2_Stream2->CR |= 1 << DMA_SxCR_TCIE_Pos;//Разрешение прерывания завершения передачи
+//		DMA2_Stream2->CR |= 1 << DMA_SxCR_HTIE_Pos;//Разрешение прерывания завершения передачи
     DMA2_Stream2->PAR = (uint32_t)(&USART1->DR);// Адрес регистра данных spi
+		//DMA2_Stream2->PAR = (uint32_t)dataDMA;
     DMA2_Stream2->NDTR = SIZE_BUF_USART;//размер массива
     DMA2_Stream2->M0AR = (uint32_t)dataDMARxUSART;// Адрес буфера
     DMA2_Stream2->CR |= 1 << DMA_SxCR_EN_Pos;//включение потока
@@ -107,8 +115,10 @@ void USART1_ReadString(uint8_t *data, uint8_t size_buf) // считываем р
 			{
 				uint8_t temp = USART1->DR;
 				data[i] = temp;
+				dataDMA[i]=temp;
 			}
 	}
+
 }
 
 void USART1_SetString(uint8_t *str) // Установка строки по символьно
@@ -168,20 +178,45 @@ void DMA2_Stream7_IRQHandler(void)
 
 void DMA2_Stream2_IRQHandler(void)
 {
-//	for (int i = 0; i < 2; i++)
+//	for (int i = 0; i < 1; i++)
 //	{
-			if(DMA2->LISR & DMA_LISR_TCIF2)
+//			if(DMA2->LISR & DMA_LISR_HTIF2)
+//			{
+////								uint8_t temp = dataDMARxUSART[i];
+////								read2[i]=temp;
+//									for (int i = 0; i < 10; i++)
+//									{
+//										uint8_t temp = dataDMARxUSART[i];
+//										read[i]=temp;
+//									}
+//			}
+//	}
+	
+DMA2->LIFCR |= DMA_LIFCR_CHTIF2;
+
+//	for (int i = 0; i < 10; i++)
+//	{
+			if ((DMA2->LISR & DMA_LISR_TCIF2) == DMA_LISR_TCIF2)
 			{
-					for (int i = 0; i < 10; i++)
-					{
-						if((i % 10)==1)
-							{
-								read[i] = dataDMARxUSART[i];
-							}
-					}
+//								uint8_t temp = dataDMARxUSART[i];
+//								read[i]=temp;
+
+									for (int i = 0; i < 10; i++)
+									{
+										uint8_t temp = dataDMARxUSART[i];
+										read2[i]=temp;
+									}
 			}
 //	}
-	DMA2->LIFCR |= DMA_LIFCR_CTCIF2;
+////DMA2_Stream2->CR |= 1 << DMA_SxCR_TCIE_Pos;//Разрешение прерывания завершения передачи
+//DMA2_Stream2->CR |= 1 << DMA_SxCR_EN_Pos;//включение потока
+DMA2->LIFCR |= DMA_LIFCR_CTCIF2;
+
+	
+		
+		//DMA2_Stream2->CR |= 1 << DMA_SxCR_HTIE_Pos;//Разрешение прерывания завершения передачи
+
+	
 	
 	
 //    if ((DMA2->LISR & DMA_LISR_TCIF2) == DMA_LISR_TCIF2)
@@ -204,6 +239,8 @@ void DMA2_Stream2_IRQHandler(void)
 //    }
 		LED6();
 	USART1_SetString(read);
+	USART1_SetString(read2);
+	//USART1_DMA2_SetString(read,10);
 }
 
 ///
