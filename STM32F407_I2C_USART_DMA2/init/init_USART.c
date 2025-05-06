@@ -1,9 +1,9 @@
 #include "init_USART.h"
 
 int cou=0;
-uint8_t read[5];
+uint8_t read[SIZE_BUF_USART];
 uint8_t read1[5];
-uint8_t dataDMARxUSART[5];
+uint8_t dataDMARxUSART[SIZE_BUF_USART];
 
 void Init_USART1(uint16_t baudRate)
 {
@@ -40,7 +40,7 @@ void Config_USART1(uint16_t baudRate)
 	USART1->CR1 |= 1 << USART_CR1_TE_Pos;	  // Включить TX
 	USART1->CR1 |= 1 << USART_CR1_RE_Pos;	  // Включить RX
 	USART1->CR2 |= 2 << USART_CR2_STOP_Pos;	  // Установили STOP бит
-	//USART1->CR1 |= 1 << USART_CR1_RXNEIE_Pos; // Включить прерывание
+	USART1->CR1 |= 1 << USART_CR1_RXNEIE_Pos; // Включить прерывание
 	
   USART1->CR3 |= 1 << USART_CR3_DMAR_Pos;
   USART1->CR3 |= 1 << USART_CR3_DMAT_Pos;
@@ -74,10 +74,10 @@ void Config_USART1_DMA2()
 
     //DMA2_Stream2->CR = 0;
     DMA2_Stream2->CR |= 4 << DMA_SxCR_CHSEL_Pos;  // Stream 2-Channel 4 USART1_RX
-    DMA2_Stream2->CR |= 1 << DMA_SxCR_MBURST_Pos;//Конфигурация передачи пакета памяти
-    DMA2_Stream2->CR |= 1 << DMA_SxCR_PBURST_Pos;//Конфигурация периферийной пакетной передачи
+    DMA2_Stream2->CR |= 0 << DMA_SxCR_MBURST_Pos;//Конфигурация передачи пакета памяти
+    DMA2_Stream2->CR |= 0 << DMA_SxCR_PBURST_Pos;//Конфигурация периферийной пакетной передачи
     DMA2_Stream2->CR |= 0 << DMA_SxCR_PL_Pos;//уровень приоритета
-    DMA2_Stream2->CR |= 1 << DMA_SxCR_PINCOS_Pos;//размер смещения периферийного приращения связан с PSIZE
+    DMA2_Stream2->CR |= 0 << DMA_SxCR_PINCOS_Pos;//размер смещения периферийного приращения связан с PSIZE
     DMA2_Stream2->CR |= 1 << DMA_SxCR_MSIZE_Pos;//Размер данных памяти1
     DMA2_Stream2->CR |= 1 << DMA_SxCR_PSIZE_Pos;//Размер периферийных данных
     DMA2_Stream2->CR |= 1 << DMA_SxCR_MINC_Pos;//Режим приращения памяти
@@ -86,7 +86,7 @@ void Config_USART1_DMA2()
     DMA2_Stream2->CR |= 0 << DMA_SxCR_DIR_Pos;//направление передачи данных 00: периферийное устройство-память 01: память-периферийное устройство
     DMA2_Stream2->CR |= 1 << DMA_SxCR_TCIE_Pos;//Разрешение прерывания завершения передачи
     DMA2_Stream2->PAR = (uint32_t)(&USART1->DR);// Адрес регистра данных spi
-    DMA2_Stream2->NDTR = 5;//размер массива
+    DMA2_Stream2->NDTR = SIZE_BUF_USART;//размер массива
     DMA2_Stream2->M0AR = (uint32_t)dataDMARxUSART;// Адрес буфера
     DMA2_Stream2->CR |= 1 << DMA_SxCR_EN_Pos;//включение потока
 
@@ -99,14 +99,15 @@ void Config_USART1_DMA2()
 
 void USART1_ReadString(uint8_t *data, uint8_t size_buf) // считываем регистр
 {
+
+	//old
 	for (int i = 0; i < size_buf; i++)
 	{
-		while (!(USART1->SR & USART_SR_RXNE))
-		{
-		};
-
-		uint8_t temp = USART1->DR;
-		data[i] = temp;
+			if(USART1->SR & USART_SR_RXNE)
+			{
+				uint8_t temp = USART1->DR;
+				data[i] = temp;
+			}
 	}
 }
 
@@ -167,19 +168,42 @@ void DMA2_Stream7_IRQHandler(void)
 
 void DMA2_Stream2_IRQHandler(void)
 {
-		
+//	for (int i = 0; i < 2; i++)
+//	{
+			if(DMA2->LISR & DMA_LISR_TCIF2)
+			{
+					for (int i = 0; i < 10; i++)
+					{
+						if((i % 10)==1)
+							{
+								read[i] = dataDMARxUSART[i];
+							}
+					}
+			}
+//	}
+	DMA2->LIFCR |= DMA_LIFCR_CTCIF2;
+	
+	
 //    if ((DMA2->LISR & DMA_LISR_TCIF2) == DMA_LISR_TCIF2)
-		if (DMA2->LISR & DMA_LISR_TCIF2)
-    {
-        //DMA2->LIFCR |= DMA_LIFCR_CTCIF2;
-				USART1_DMA2_ReadChar(read);
-				read1[cou]=read[0];
-				cou++;
-				if(cou > 4){DMA2->LIFCR |= DMA_LIFCR_CTCIF2;}
-        LED6();
-				//SPI2_DMA_TransmitReceive(receivedStringConsole);
-    }
+//		if (DMA2->LISR & DMA_LISR_TCIF2)
+//    {
+////        //DMA2->LIFCR |= DMA_LIFCR_CTCIF2;
+////				USART1_DMA2_ReadChar(read);
+////				read1[cou]=read[0];
+////				cou++;
+////				if(cou > 4){DMA2->LIFCR |= DMA_LIFCR_CTCIF2;}
+////        LED6();
+//				//SPI2_DMA_TransmitReceive(receivedStringConsole);
+//			DMA2_Stream2->CR |= 0 << DMA_SxCR_EN_Pos;
+//			DMA2_Stream2->NDTR = 3;//размер массива
+//			DMA2_Stream2->CR |= 1 << DMA_SxCR_EN_Pos;//включение потока
+//			uint8_t temp = dataDMARxUSART[0];
+//							read[0] = dataDMARxUSART[0];
+//							read[1] = dataDMARxUSART[1];
+//			DMA2->LIFCR |= DMA_LIFCR_CTCIF2;
+//    }
 		LED6();
+	USART1_SetString(read);
 }
 
 ///
