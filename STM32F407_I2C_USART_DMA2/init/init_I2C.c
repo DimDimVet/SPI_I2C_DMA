@@ -14,7 +14,7 @@ void Enable_RCC_I2C()
 {
   RCC->AHB1ENR |= 1 << RCC_AHB1ENR_GPIOBEN_Pos; // Включаем тактирование порта B
   RCC->APB1ENR |= 1 << RCC_APB1ENR_I2C1EN_Pos;  // Включаем тактирование
-  RCC->AHB1ENR |= 1 << RCC_AHB1ENR_DMA1EN_Pos;  // Включаем тактирование DMA1
+  //RCC->AHB1ENR |= 1 << RCC_AHB1ENR_DMA1EN_Pos;  // Включаем тактирование DMA1
 }
 
 void Config_GPIO_I2C()
@@ -105,7 +105,7 @@ void Config_I2C_DMA1()
     DMA1_Stream5->CR |= 2 << DMA_SxCR_PSIZE_Pos;//Размер периферийных данных
     DMA1_Stream5->CR |= 1 << DMA_SxCR_MINC_Pos;//Режим приращения памяти
     DMA1_Stream5->CR |= 1 << DMA_SxCR_PINC_Pos;//Режим приращения периферийных устройств
-    DMA1_Stream5->CR |= 1 << DMA_SxCR_CIRC_Pos;//кольцевой режим
+    DMA1_Stream5->CR |= 0 << DMA_SxCR_CIRC_Pos;//кольцевой режим
     DMA1_Stream5->CR |= 0 << DMA_SxCR_DIR_Pos;//направление передачи данных 00: периферийное устройство-память 01: память-периферийное устройство
     DMA1_Stream5->CR |= 1 << DMA_SxCR_TCIE_Pos;//Разрешение прерывания завершения передачи
     DMA1_Stream5->PAR = (uint32_t)(&I2C1->DR);// Адрес регистра данных I2C1

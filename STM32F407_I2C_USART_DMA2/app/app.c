@@ -1,32 +1,65 @@
 #include "app.h"
 
-
-
 void ExecutorTerminal_USART_Irq(void)
 {
 
-//	USART1_ReadString(receivedStringConsole, SIZE_BUF_USART); // Читаем из консоли
-
-//	__disable_irq();
-
-//	while (I2C_Master_TransmitDMA(I2C_ADDRESS, receivedStringConsole, SIZE_BUF_USART) != 0)
-//	{
-//		Error_Handler();
-//	}
-
-//	while (I2C_Master_ReceiveT(I2C_ADDRESS, rezultRead, SIZE_BUF_USART) != 0)
-//	{
-//		Error_Handler();
-//	}
-
-//	__enable_irq();
-
-//	USART1_SetString(rezultRead);
-	//temp
 	USART1_ReadString(receivedStringConsole, SIZE_BUF_USART); // Читаем из консоли
-	USART1_SetString(receivedStringConsole);
+
+	__disable_irq();
+
+	while (I2C_Master_TransmitDMA(I2C_ADDRESS, dataToSend, BUFFER_SIZE_I2C) != 0)
+	{
+		Error_Handler();
+	}
+
+	while (I2C_Master_ReceiveT(I2C_ADDRESS, receivedData, BUFFER_SIZE_I2C) != 0)
+	{
+		Error_Handler();
+	}
+
+	__enable_irq();
+
+	USART1_SetString(rezultRead);
+
 }
 
+void ExecutorTerminal_USART_DMA_Irq(void)
+{
+
+	USART1_DMA2_ReadString(receivedStringConsole,SIZE_BUF_USART); // Читаем из консоли
+
+	__disable_irq();
+
+//	while (I2C_Master_TransmitDMA(I2C_ADDRESS, (uint8_t*)receivedStringConsole, BUFFER_SIZE_I2C) != 0)
+//	{
+//		Error_Handler();
+//	}
+
+//	while (I2C_Master_ReceiveT(I2C_ADDRESS, (uint8_t*)rezultRead, BUFFER_SIZE_I2C) != 0)
+//	{
+//		Error_Handler();
+//	}
+
+			for (int i = 0; i < SIZE_BUF_USART; i++)
+									{
+										uint8_t temp = receivedStringConsole[i];
+										rezultRead[i]=temp;
+									}
+
+
+	__enable_irq();
+
+	USART1_DMA2_SetString(rezultRead, SIZE_BUF_USART);
+
+	//temp
+//	USART1_DMA2_ReadString(receivedStringConsole,SIZE_BUF_USART);
+//			for (int i = 0; i < SIZE_BUF_USART; i++)
+//									{
+//										uint8_t temp = receivedStringConsole[i];
+//										rezultRead[i]=temp;
+//									}
+//	USART1_DMA2_SetString(rezultRead, SIZE_BUF_USART);
+}
 
 
 /////////////////

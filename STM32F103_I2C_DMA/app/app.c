@@ -128,14 +128,14 @@ int main()
 	
 	while(1)
 	{
-        while(I2C_Slave_Receive(receivedData, 2)!= 0)
+        if(I2C_Slave_Receive(receivedData, 16)!= 0)
         {
             Error_Handler();
         }
 
 				//delay_us(100);
 					
-        if(I2C_Slave_Transmit(dataToSend, 2)!= 0)
+        if(I2C_Slave_Transmit(dataToSend, 16)!= 0)
         {
             Error_Handler();
         }

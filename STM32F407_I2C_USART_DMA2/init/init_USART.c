@@ -1,13 +1,13 @@
 #include "init_USART.h"
 
-int cou=0;
-uint8_t read[SIZE_BUF_USART];
-uint8_t read2[SIZE_BUF_USART];
+//int cou=0;
+//uint8_t read[SIZE_BUF_USART];
+//char read2[SIZE_BUF_USART];
 
-uint8_t read1_[SIZE_BUF_USART];
-uint8_t *read1=read1_;
-uint8_t dataDMA_[SIZE_BUF_USART];
-uint8_t *dataDMA=dataDMA_;
+//uint8_t read1_[SIZE_BUF_USART];
+//uint8_t *read1=read1_;
+//uint8_t dataDMA_[SIZE_BUF_USART];
+//uint8_t *dataDMA=dataDMA_;
 
 uint8_t dataDMARxUSART[SIZE_BUF_USART];
 
@@ -46,10 +46,10 @@ void Config_USART1(uint16_t baudRate)
 	USART1->CR1 |= 1 << USART_CR1_TE_Pos;	  // Включить TX
 	USART1->CR1 |= 1 << USART_CR1_RE_Pos;	  // Включить RX
 	USART1->CR2 |= 2 << USART_CR2_STOP_Pos;	  // Установили STOP бит
-	//USART1->CR1 |= 1 << USART_CR1_RXNEIE_Pos; // Включить прерывание
+	USART1->CR1 |= 1 << USART_CR1_RXNEIE_Pos; // Включить прерывание
 	
-  USART1->CR3 |= 1 << USART_CR3_DMAR_Pos;
-  USART1->CR3 |= 1 << USART_CR3_DMAT_Pos;
+//  USART1->CR3 |= 1 << USART_CR3_DMAR_Pos;
+//  USART1->CR3 |= 1 << USART_CR3_DMAT_Pos;
 
 	USART1->CR1 |= 1 << USART_CR1_UE_Pos; // Включить USART1
 	NVIC_SetPriority(USART1_IRQn, 2); // Установите приоритет
@@ -98,32 +98,30 @@ void Config_USART1_DMA2()
     DMA2_Stream2->M0AR = (uint32_t)dataDMARxUSART;// Адрес буфера
     DMA2_Stream2->CR |= 1 << DMA_SxCR_EN_Pos;//включение потока
 
-    DMA2->HIFCR |= 1 << DMA_HIFCR_CHTIF7_Pos;
+    DMA2->HIFCR |= 1 << DMA_HIFCR_CTCIF7_Pos;
     DMA2->LIFCR |= 1 << DMA_LIFCR_CTCIF2_Pos;
     NVIC_EnableIRQ(DMA2_Stream7_IRQn);// Включение прерываний DMA
     NVIC_EnableIRQ(DMA2_Stream2_IRQn);// Включение прерываний DMA
 }
 ///////////////////////////
 
-void USART1_ReadString(uint8_t *data, uint8_t size_buf) // считываем регистр
+void USART1_ReadString(char *str, uint8_t size_buf) // считываем регистр
 {
-
 	//old
 	for (int i = 0; i < size_buf; i++)
 	{
 			if(USART1->SR & USART_SR_RXNE)
 			{
 				uint8_t temp = USART1->DR;
-				data[i] = temp;
-				dataDMA[i]=temp;
+				str[i] = temp;
 			}
 	}
 
 }
 
-void USART1_SetString(uint8_t *str) // Установка строки по символьно
+void USART1_SetString(char* str) // Установка строки по символьно
 {
-	uint8_t size = strlen((char*)str);
+	uint8_t size = strlen(str);
 	
 	if(size==0){return;}
 	
@@ -137,23 +135,26 @@ void USART1_SetString(uint8_t *str) // Установка строки по си
 	}
 }
 
-void USART1_DMA2_SetString(uint8_t* str,uint8_t size_buf)//Установка строки по символьно
+void USART1_DMA2_ReadString(char *str, uint8_t size_buf) // считываем регистр
+{
+		for (int i = 0; i < size_buf; i++)
+									{
+										uint8_t temp = dataDMARxUSART[i];
+										str[i]=temp;
+									}
+
+}
+
+void USART1_DMA2_SetString(char* str,uint8_t size_buf)//Установка строки по символьно
 {
 
 			DMA2_Stream7->CR &= ~DMA_SxCR_EN;
-			DMA2_Stream7->NDTR = size_buf;
+			
+			uint8_t sizeTxU = strlen(str);
+
+			DMA2_Stream7->NDTR = sizeTxU;
 			DMA2_Stream7->M0AR = (uint32_t)str;
 			DMA2_Stream7->CR |= DMA_SxCR_EN;
-}
-
-void USART1_DMA2_ReadChar(uint8_t* readChar)//считываем массив[0]
-{
-	readChar[0]=(uint8_t)dataDMARxUSART[0];
-	readChar[1]=(uint8_t)dataDMARxUSART[1];
-	readChar[2]=(uint8_t)dataDMARxUSART[2];
-	readChar[3]=(uint8_t)dataDMARxUSART[3];
-	readChar[4]=(uint8_t)dataDMARxUSART[4];
-	
 }
 
 // IRQ
@@ -166,6 +167,21 @@ void USART1_IRQHandler(void)
 	//LED7();
 }
 
+void DMA2_Stream2_IRQHandler(void)
+{
+			if ((DMA2->LISR & DMA_LISR_TCIF2) == DMA_LISR_TCIF2)
+			{
+					//USART1_DMA2_ReadString(read2,SIZE_BUF_USART);
+					//USART1_DMA2_SetString(read2,SIZE_BUF_USART);
+					ExecutorTerminal_USART_DMA_Irq();
+			}
+			
+			DMA2->LIFCR |= DMA_LIFCR_CTCIF2;
+
+		LED6();
+
+}
+
 void DMA2_Stream7_IRQHandler(void)
 {
     if ((DMA2->HISR & DMA_HISR_TCIF7) == DMA_HISR_TCIF7)
@@ -176,72 +192,20 @@ void DMA2_Stream7_IRQHandler(void)
     LED7();
 }
 
-void DMA2_Stream2_IRQHandler(void)
-{
-//	for (int i = 0; i < 1; i++)
-//	{
-//			if(DMA2->LISR & DMA_LISR_HTIF2)
+//void DMA2_Stream2_IRQHandler(void)
+//{
+//	
+//			if ((DMA2->LISR & DMA_LISR_TCIF2) == DMA_LISR_TCIF2)
 //			{
-////								uint8_t temp = dataDMARxUSART[i];
-////								read2[i]=temp;
-//									for (int i = 0; i < 10; i++)
-//									{
-//										uint8_t temp = dataDMARxUSART[i];
-//										read[i]=temp;
-//									}
+//					USART1_DMA2_ReadString(dataDMARxUSART,read2,SIZE_BUF_USART);
+//					USART1_DMA2_SetString(read2,SIZE_BUF_USART);
 //			}
-//	}
-	
-DMA2->LIFCR |= DMA_LIFCR_CHTIF2;
-
-//	for (int i = 0; i < 10; i++)
-//	{
-			if ((DMA2->LISR & DMA_LISR_TCIF2) == DMA_LISR_TCIF2)
-			{
-//								uint8_t temp = dataDMARxUSART[i];
-//								read[i]=temp;
-
-									for (int i = 0; i < 10; i++)
-									{
-										uint8_t temp = dataDMARxUSART[i];
-										read2[i]=temp;
-									}
-			}
-//	}
-////DMA2_Stream2->CR |= 1 << DMA_SxCR_TCIE_Pos;//Разрешение прерывания завершения передачи
-//DMA2_Stream2->CR |= 1 << DMA_SxCR_EN_Pos;//включение потока
-DMA2->LIFCR |= DMA_LIFCR_CTCIF2;
-
-	
-		
-		//DMA2_Stream2->CR |= 1 << DMA_SxCR_HTIE_Pos;//Разрешение прерывания завершения передачи
-
-	
-	
-	
-//    if ((DMA2->LISR & DMA_LISR_TCIF2) == DMA_LISR_TCIF2)
-//		if (DMA2->LISR & DMA_LISR_TCIF2)
-//    {
-////        //DMA2->LIFCR |= DMA_LIFCR_CTCIF2;
-////				USART1_DMA2_ReadChar(read);
-////				read1[cou]=read[0];
-////				cou++;
-////				if(cou > 4){DMA2->LIFCR |= DMA_LIFCR_CTCIF2;}
-////        LED6();
-//				//SPI2_DMA_TransmitReceive(receivedStringConsole);
-//			DMA2_Stream2->CR |= 0 << DMA_SxCR_EN_Pos;
-//			DMA2_Stream2->NDTR = 3;//размер массива
-//			DMA2_Stream2->CR |= 1 << DMA_SxCR_EN_Pos;//включение потока
-//			uint8_t temp = dataDMARxUSART[0];
-//							read[0] = dataDMARxUSART[0];
-//							read[1] = dataDMARxUSART[1];
+//			
 //			DMA2->LIFCR |= DMA_LIFCR_CTCIF2;
-//    }
-		LED6();
-	USART1_SetString(read);
-	USART1_SetString(read2);
-	//USART1_DMA2_SetString(read,10);
-}
+
+//		LED6();
+
+//}
 
 ///
 

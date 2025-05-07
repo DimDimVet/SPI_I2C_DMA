@@ -6,7 +6,7 @@
 #include "stm32f4xx.h"
 #include "init_LED.h"
 
-#define BUFFER_SIZE_I2C 16
+#define BUFFER_SIZE_I2C 2
 #define I2C_ADDRESSINGMODE_7BIT         0x00004000U
 #define CLOCK_SPEED 100000
 
