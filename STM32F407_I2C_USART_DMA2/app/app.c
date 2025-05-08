@@ -2,24 +2,51 @@
 
 void ExecutorTerminal_USART_Irq(void)
 {
+char rezultRead1[SIZE_BUF_USART];
+char receivedStringConsole1[SIZE_BUF_USART];
 
-	USART1_ReadString(receivedStringConsole, SIZE_BUF_USART); // Читаем из консоли
+	USART1_ReadString(receivedStringConsole1, SIZE_BUF_USART); // Читаем из консоли
 
 	__disable_irq();
 
-	while (I2C_Master_TransmitDMA(I2C_ADDRESS, dataToSend, BUFFER_SIZE_I2C) != 0)
-	{
-		Error_Handler();
-	}
+//	while (I2C_Master_TransmitDMA(I2C_ADDRESS, (uint8_t*)receivedStringConsole, BUFFER_SIZE_I2C) != 0)
+//	{
+//		Error_Handler();
+//	}
 
-	while (I2C_Master_ReceiveT(I2C_ADDRESS, receivedData, BUFFER_SIZE_I2C) != 0)
-	{
-		Error_Handler();
-	}
+//	while (I2C_Master_ReceiveT(I2C_ADDRESS, (uint8_t*)rezultRead, BUFFER_SIZE_I2C) != 0)
+//	{
+//		Error_Handler();
+//	}
 
+//				for (int i = 0; i < SIZE_BUF_USART; i++)
+//									{
+//										uint8_t temp = receivedStringConsole1[i];
+//										rezultRead1[i]=temp;
+//									}
+//	rezultRead1[count_size_buf]=receivedStringConsole1[0];
+//count_size_buf--;
+	
 	__enable_irq();
+		
+rezultRead[count_size_buf]=receivedStringConsole1[0];
 
+if(count_size_buf==0)
+{
+	count_size_buf=SIZE_BUF_USART;
+}
+
+count_size_buf--;
+
+	//USART1_SetString(rezultRead);
+if(count_size_buf==0)
+{
+	
 	USART1_SetString(rezultRead);
+}
+//									
+//	
+//									
 
 }
 

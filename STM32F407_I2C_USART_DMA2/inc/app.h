@@ -10,8 +10,8 @@
 
 #define I2C_ADDRESS 0x68  // Адрес I2C устройства
 
-	char rezultRead[SIZE_BUF_USART];
-	char receivedStringConsole[SIZE_BUF_USART];
+static	char rezultRead[SIZE_BUF_USART];
+static	char receivedStringConsole[SIZE_BUF_USART];
 	
 	uint8_t rezultRead1[SIZE_BUF_USART];
 	uint8_t receivedStringConsole1[SIZE_BUF_USART];

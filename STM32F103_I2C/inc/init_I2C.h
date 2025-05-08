@@ -6,7 +6,7 @@
 #include "stm32f10x.h" 
 #include "init_LED.h"
 
-#define SIZE_BUF 10
+#define SIZE_BUF 16
 #define CLOCK_SPEED  100000
 #define TICK_FREQ_1KHZ 1U
 #define SLAVE_ADDR  0x68

@@ -16,7 +16,7 @@ void Init_USART1(uint16_t baudRate)
 	Enable_RCC_USART1();
 	Config_GPIO_USART1();
 	Config_USART1(baudRate);
-	Config_USART1_DMA2();
+	//Config_USART1_DMA2();
 }
 
 void Enable_RCC_USART1(void)
@@ -105,18 +105,19 @@ void Config_USART1_DMA2()
 }
 ///////////////////////////
 
-void USART1_ReadString(char *str, uint8_t size_buf) // считываем регистр
+void USART1_ReadString(uint8_t *str, uint8_t size_buf) // считываем регистр
 {
 	//old
-	for (int i = 0; i < size_buf; i++)
-	{
+
 			if(USART1->SR & USART_SR_RXNE)
 			{
-				uint8_t temp = USART1->DR;
-				str[i] = temp;
+					for (int i = 0; i < 1; i++)
+					{
+				
+				char temp = USART1->DR;
+				str[i] = USART1->DR;
+						}
 			}
-	}
-
 }
 
 void USART1_SetString(char* str) // Установка строки по символьно
