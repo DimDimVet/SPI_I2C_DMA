@@ -2,92 +2,67 @@
 
 void ExecutorTerminal_USART_Irq(void)
 {
-char rezultRead1[SIZE_BUF_USART];
-char receivedStringConsole1[SIZE_BUF_USART];
 
-	USART1_ReadString(receivedStringConsole1, SIZE_BUF_USART); // Читаем из консоли
+	USART1_ReadChar(receivedChar); // Читаем из консоли
 
-	__disable_irq();
+	if (count_size_buf >= SIZE_BUF_USART)
+	{
+		count_size_buf = 0;
 
-//	while (I2C_Master_TransmitDMA(I2C_ADDRESS, (uint8_t*)receivedStringConsole, BUFFER_SIZE_I2C) != 0)
-//	{
-//		Error_Handler();
-//	}
+		__disable_irq();
 
-//	while (I2C_Master_ReceiveT(I2C_ADDRESS, (uint8_t*)rezultRead, BUFFER_SIZE_I2C) != 0)
-//	{
-//		Error_Handler();
-//	}
+		while (I2C_Master_TransmitT(I2C_ADDRESS, (uint8_t *)rezultReadConsol, BUFFER_SIZE_I2C) != 0)
+		{
+			Error_Handler();
+		}
 
-//				for (int i = 0; i < SIZE_BUF_USART; i++)
-//									{
-//										uint8_t temp = receivedStringConsole1[i];
-//										rezultRead1[i]=temp;
-//									}
-//	rezultRead1[count_size_buf]=receivedStringConsole1[0];
-//count_size_buf--;
-	
-	__enable_irq();
-		
-rezultRead[count_size_buf]=receivedStringConsole1[0];
+		while (I2C_Master_ReceiveT(I2C_ADDRESS, (uint8_t *)rezultReadI2C, BUFFER_SIZE_I2C) != 0)
+		{
+			Error_Handler();
+		}
 
-if(count_size_buf==0)
-{
-	count_size_buf=SIZE_BUF_USART;
-}
+		__enable_irq();
 
-count_size_buf--;
-
-	//USART1_SetString(rezultRead);
-if(count_size_buf==0)
-{
-	
-	USART1_SetString(rezultRead);
-}
-//									
-//	
-//									
-
+		USART1_SetString(rezultReadI2C);
+	}
+	else
+	{
+		rezultReadConsol[count_size_buf] = receivedChar_;
+		count_size_buf++;
+	}
 }
 
 void ExecutorTerminal_USART_DMA_Irq(void)
 {
 
-	USART1_DMA2_ReadString(receivedStringConsole,SIZE_BUF_USART); // Читаем из консоли
+	USART1_DMA2_ReadChar(receivedChar);
 
-	__disable_irq();
+	if (count_size_buf >= SIZE_BUF_USART)
+	{
+		count_size_buf = 0;
 
-//	while (I2C_Master_TransmitDMA(I2C_ADDRESS, (uint8_t*)receivedStringConsole, BUFFER_SIZE_I2C) != 0)
-//	{
-//		Error_Handler();
-//	}
+		__disable_irq();
 
-//	while (I2C_Master_ReceiveT(I2C_ADDRESS, (uint8_t*)rezultRead, BUFFER_SIZE_I2C) != 0)
-//	{
-//		Error_Handler();
-//	}
+		while (I2C_Master_TransmitT(I2C_ADDRESS, (uint8_t *)rezultReadConsol, BUFFER_SIZE_I2C) != 0)
+		{
+			Error_Handler();
+		}
 
-			for (int i = 0; i < SIZE_BUF_USART; i++)
-									{
-										uint8_t temp = receivedStringConsole[i];
-										rezultRead[i]=temp;
-									}
+		while (I2C_Master_ReceiveT(I2C_ADDRESS, (uint8_t *)rezultReadI2C, BUFFER_SIZE_I2C) != 0)
+		{
+			Error_Handler();
+		}
 
+		__enable_irq();
 
-	__enable_irq();
-
-	USART1_DMA2_SetString(rezultRead, SIZE_BUF_USART);
-
-	//temp
-//	USART1_DMA2_ReadString(receivedStringConsole,SIZE_BUF_USART);
-//			for (int i = 0; i < SIZE_BUF_USART; i++)
-//									{
-//										uint8_t temp = receivedStringConsole[i];
-//										rezultRead[i]=temp;
-//									}
-//	USART1_DMA2_SetString(rezultRead, SIZE_BUF_USART);
+		USART1_DMA2_SetString(rezultReadI2C, SIZE_BUF_USART);
+	}
+	else
+	{
+		rezultReadConsol[count_size_buf] = receivedChar_;
+		count_size_buf++;
+	}
 }
-
 
 /////////////////
 
@@ -99,7 +74,6 @@ int main()
 
 	while (1)
 	{
-
 	}
 
 	return 0;

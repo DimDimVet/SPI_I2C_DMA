@@ -28,8 +28,8 @@ void Config_GPIO_SPI1(void)
     GPIOB->MODER |= 2 << GPIO_MODER_MODE15_Pos; // Альтернативная функция для PB15(MOSI)
 
     GPIOB->AFR[1] |= 5 << GPIO_AFRH_AFSEL13_Pos; // AF5 для SPI1 PB13(SCK)
-    GPIOB->AFR[1] |= 5 << GPIO_AFRH_AFSEL14_Pos; // AF5 для SPI1 PB14(MISO)
-    GPIOB->AFR[1] |= 5 << GPIO_AFRH_AFSEL15_Pos; // AF5 для SPI1 PB15(MOSI)
+    GPIOB->AFR[1] |= 5 << GPIO_AFRH_AFSEL14_Pos; // AF5 для SPI1 PB14(MOSI)
+    GPIOB->AFR[1] |= 5 << GPIO_AFRH_AFSEL15_Pos; // AF5 для SPI1 PB15(MISO)
 }
 
 void Config_SPI1(void)
@@ -53,16 +53,18 @@ void Config_SPI1(void)
     SPI2->CR2 = 0;
     // SPI2->CR2 |= 1 << SPI_CR2_RXDMAEN_Pos;// Включаем DMA
     // SPI2->CR2 |= 1 << SPI_CR2_TXDMAEN_Pos;// Включаем DMA
-    SPI2->CR2 = SPI_CR2_RXNEIE; // | SPI_CR2_TXEIE;
+    //SPI2->CR2 = SPI_CR2_RXNEIE; // | SPI_CR2_TXEIE;
     NVIC_EnableIRQ(SPI2_IRQn);  // Включаем прерывание SPI2
 
     SPI2->CR1 |= 1 << SPI_CR1_SPE_Pos; // Вкл SPI
 }
 
 // IRQ
-void SPI2_IRQHandler(void)
-{
-}
+//void SPI2_IRQHandler(void)
+//{
+//	
+//}
+
 
 ////
 uint8_t SPI2_ReadBayt()
@@ -77,27 +79,30 @@ uint8_t SPI2_ReadBayt()
     return temp_bayt;
 }
 
-uint8_t SPI2_SetBayt(uint8_t byte)
+uint8_t SPI2_SetBayt(char byte)
 {
-    SPI2->DR = byte;
+    
+		SPI2->DR = byte;
+		
     while (!(SPI2->SR & SPI_SR_TXE))
     {
         while (SPI2->SR & SPI_SR_BSY)
         {
         };
     };
+
     return 1;
 }
 
-uint8_t SPI2_TransmitReceive(uint8_t data)
-{
-    while (!(SPI2->SR & SPI_SR_TXE))
-    {
-    }
-    SPI2->DR = data;
+//uint8_t SPI2_TransmitReceive(uint8_t data)
+//{
+//    while (!(SPI2->SR & SPI_SR_TXE))
+//    {
+//    }
+//    SPI2->DR = data;
 
-    while (!(SPI2->SR & SPI_SR_RXNE))
-    {
-    }
-    return SPI2->DR;
-}
+//    while (!(SPI2->SR & SPI_SR_RXNE))
+//    {
+//    }
+//    return SPI2->DR;
+//}

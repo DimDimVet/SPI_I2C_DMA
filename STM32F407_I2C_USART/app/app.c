@@ -3,23 +3,36 @@
 void ExecutorTerminal_USART_Irq(void)
 {
 
-	USART1_ReadString(receivedStringConsole, SIZE_BUF_USART); // Читаем из консоли
+	USART1_ReadChar(receivedChar); // Читаем из консоли
 
-	__disable_irq();
+	if(count_size_buf >= SIZE_BUF_USART)
+	{
+		count_size_buf=0;
+		
+			__disable_irq();
 
-	while (I2C_Master_TransmitT(I2C_ADDRESS, receivedStringConsole, SIZE_BUF_USART) != 0)
+	while (I2C_Master_TransmitT(I2C_ADDRESS, (uint8_t*)rezultReadConsol, BUFFER_SIZE_I2C) != 0)
 	{
 		Error_Handler();
 	}
 
-	while (I2C_Master_ReceiveT(I2C_ADDRESS, rezultRead, SIZE_BUF_USART) != 0)
+	while (I2C_Master_ReceiveT(I2C_ADDRESS, (uint8_t*)rezultReadI2C, BUFFER_SIZE_I2C) != 0)
 	{
 		Error_Handler();
 	}
 
 	__enable_irq();
+	
+	
+	USART1_SetString(rezultReadI2C);
+		
+	}
+	else
+	{
+		rezultReadConsol[count_size_buf]=receivedChar_;
+		count_size_buf++;
+	}
 
-	USART1_SetString(rezultRead);
 }
 
 /////////////////

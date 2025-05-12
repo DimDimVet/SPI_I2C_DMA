@@ -2,27 +2,76 @@
 
 void ExecutorTerminal_USART_Irq(void)
 {
-	char rezultRead[SIZE_BUF_USART];
-	char rezultStr[SIZE_BUF_USART_MAX];
-	char receivedStringConsole[SIZE_BUF_USART];
-	char set_infoStr[SIZE_BUF_INFO] = {"Out console in SPI (F407): "};
+char rezultReadSPI_[SIZE_BUF_USART];
 
-	USART1_ReadString(receivedStringConsole, SIZE_BUF_USART); // Читаем из консоли
+USART1_ReadChar(receivedChar); // Читаем из консоли
 
-	for (int i = 0; i < SIZE_BUF_USART; i++)
+	if(count_size_buf >= SIZE_BUF_USART)
 	{
-		if (SPI2_SetBayt(receivedStringConsole[i]))
+		count_size_buf=0;
+		
+		__disable_irq();
+		
+		for (int i = 0; i < SIZE_BUF_USART; i++)
 		{
+		
+			SPI2_SetBayt(rezultReadConsol[i]);
+			rezultReadSPI_[i]= SPI2_ReadBayt();
+		
 		}
 
-		rezultRead[i] = SPI2_ReadBayt();
-
-		if (i >= SIZE_BUF_USART - 1)
-		{
-			snprintf(rezultStr, SIZE_BUF_USART_MAX, " %s %s ", set_infoStr, rezultRead);
-			USART1_SetString(rezultStr);
-		}
+	if(1)
+	{
+		USART1_SetString(rezultReadSPI_);
+		__enable_irq();
 	}
+	else
+	{
+		USART1_SetString(rezultReadConsol);
+		__enable_irq();
+	}
+	
+	//USART1_SetString(rezultReadConsol);
+	
+	}
+	else
+	{
+
+		rezultReadConsol[count_size_buf]=receivedChar_;
+		count_size_buf++;
+	}
+
+}
+
+void SPI2_IRQHandler(void)
+{
+	//__disable_irq();
+	//rezultReadSPI[0] = SPI2_ReadBayt();
+	//rezultReadSPI[count_size_buf] = SPI2_ReadBayt();
+		//count_size_buf++;
+
+	 // Читаем из консоли
+
+//	if(count_size_buf >= SIZE_BUF_USART-1)
+//	{
+//		count_size_buf=0;
+//			
+//		USART1_SetString(rezultReadSPI);
+//		
+//	}
+//	else
+//	{
+//		rezultReadSPI[count_size_buf] = SPI2_ReadBayt();
+//		count_size_buf++;
+//		USART1_SetString(rezultReadSPI);
+//	}
+//USART1_SetString(rezultReadSPI);
+
+//		for (int i = 0; i < 1; i++)
+//		{
+//			rezultReadSPI[i] = SPI2_ReadBayt();
+//		}
+//			USART1_SetString(rezultReadSPI);
 }
 
 /////////////////
@@ -35,10 +84,7 @@ int main(void)
 
 	while (1)
 	{
-		//				if(SPI2_SetBayt(0xAA))
-		//				{
-		//					 tst=SPI2_ReadBayt();
-		//				}
+
 	}
 
 	return 0;

@@ -6,14 +6,14 @@
 #include "stm32f4xx.h"
 #include "init_LED.h"
 
-#define BUFFER_SIZE_I2C 16
-#define I2C_ADDRESSINGMODE_7BIT         0x00004000U
+#define BUFFER_SIZE_I2C 10
+#define I2C_ADDRESSINGMODE_7BIT 0x00004000U
 #define CLOCK_SPEED 100000
 
-#define I2C_TIMEOUT_BUSY_FLAG     25U
-#define I2C_FLAG_BUSY                   0x00100002U
-#define I2C_FLAG_BTF                    0x00010004U
-#define I2C_FLAG_MASK                   0x0000FFFFU
+#define I2C_TIMEOUT_BUSY_FLAG 25U
+#define I2C_FLAG_BUSY 0x00100002U
+#define I2C_FLAG_BTF 0x00010004U
+#define I2C_FLAG_MASK 0x0000FFFFU
 
 void Init_I2C(void);
 void Enable_RCC_I2C(void);
@@ -38,10 +38,8 @@ uint8_t I2C_Master_ReceiveT(uint16_t DevAddress, uint8_t *pData, uint16_t Size);
 uint8_t I2C_Master_TransmitT(uint16_t DevAddress, uint8_t *pData, uint16_t Size);
 
 uint8_t I2C_Master_TransmitDMA(uint16_t DevAddress, uint8_t *pData, uint16_t Size);
-void Transmit_I2C_DMA(uint8_t *data,uint16_t Size);
-uint8_t * Receive_I2C_DMA();
-
+void Transmit_I2C_DMA(uint8_t *data, uint16_t Size);
+uint8_t *Receive_I2C_DMA();
 
 void Error_Handler(void);
 #endif
-

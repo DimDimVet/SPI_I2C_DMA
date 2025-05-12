@@ -1,5 +1,7 @@
 #include "init_SPI.h"
 
+	uint8_t data;
+
 int countSPI=0;
 char set_infoStr[SIZE_BUF_SPI] = "F103";
 uint8_t dataBufSPI_[SIZE_BUF_SPI];
@@ -61,10 +63,10 @@ void Config_SPI1()
 	SPI1->CR1 |= SPI_CR1_CPHA;		// фаза...
 
 	// SPI1->CR2 |=SPI_CR2_TXDMAEN;//переключили дма на spi - передача, DMAT = Tx
-	// SPI1->CR2 |=SPI_CR2_RXDMAEN;//переключили дма на spi - чтение, DMAR = Rx
+	 //SPI1->CR2 |=SPI_CR2_RXDMAEN;//переключили дма на spi - чтение, DMAR = Rx
 
 	SPI1->CR2 = SPI_CR2_RXNEIE; // | SPI_CR2_TXEIE;
-	// SPI1->CR2 = SPI_CR2_TXEIE;// | SPI_CR2_TXEIE;
+	//SPI1->CR2 = SPI_CR2_TXEIE;// | SPI_CR2_TXEIE;
 	NVIC_EnableIRQ(SPI1_IRQn); // Включаем прерывание SPI2
 
 	SPI1->CR1 |= SPI_CR1_SPE; // Вкл SPI
@@ -79,7 +81,7 @@ uint8_t SPI1_ReadBayt() // считываем регистр
 	{
 		temp_bayt = SPI1->DR;
 	}
-
+	
 	return temp_bayt;
 }
 
@@ -118,28 +120,58 @@ uint8_t SPI_TransmitReceive()
 		return SPI1->DR;
 	}
 }
+///
+void ExecutorData(uint8_t *data)
+{
+	for(int i = 0; i < SIZE_BUF_SPI; i++)
+	{
+		SPI1_SetBayt(data[i]);
+	}
+	__enable_irq();
+}
 /////IRQ
 void SPI1_IRQHandler(void)
 {
-	uint8_t data;
-	
-	data=SPI1_ReadBayt();
-	
-	SPI1_SetBayt(data);
 
-//	if((countSPI >= SIZE_BUF_SPI))
+//	data=SPI1_ReadBayt(); //test
+//	
+//	SPI1_SetBayt(data); //test
+
+//	if((countSPI >= SIZE_BUF_SPI-2))
 //	{
-//		for (int i = 0; i < SIZE_BUF_SPI; i++)
-//		{
-//			//SPI1_SetBayt(set_infoStr[i]);
-//			SPI1_SetBayt(dataBufSPI[i]);
-//		}	
+//		__disable_irq();
 //		countSPI=0;
+
+//		ExecutorData(dataBufSPI_);
 //	}	
-//	else
+
+//	if((countSPI >= 9))
 //	{
-//		dataBufSPI[countSPI]=SPI1_ReadBayt();
-//		countSPI++;	
-//	}
+//		__disable_irq();
+//		countSPI=0;
+
+//		ExecutorData(dataBufSPI_);
+//	}	
+	
+	if((countSPI >= SIZE_BUF_SPI))
+	{
+		//__disable_irq();
+		countSPI=0;
+
+		ExecutorData(dataBufSPI_);
+	}	
+	else
+	{
+		dataBufSPI_[countSPI]=SPI1_ReadBayt();
+		countSPI++;	
+		
+//		if((countSPI == SIZE_BUF_SPI))
+//			{
+//				__disable_irq();
+//				countSPI=0;
+
+//				ExecutorData(dataBufSPI_);
+//			}	
+	}
 
 }

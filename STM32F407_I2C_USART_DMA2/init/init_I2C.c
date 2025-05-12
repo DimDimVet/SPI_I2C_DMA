@@ -7,14 +7,14 @@ void Init_I2C()
   Enable_RCC_I2C();
   Config_GPIO_I2C();
   Config_I2C();
-	//Config_I2C_DMA1();//ПРОБЛЕМА
+  // Config_I2C_DMA1();//ПРОБЛЕМА
 }
 
 void Enable_RCC_I2C()
 {
   RCC->AHB1ENR |= 1 << RCC_AHB1ENR_GPIOBEN_Pos; // Включаем тактирование порта B
   RCC->APB1ENR |= 1 << RCC_APB1ENR_I2C1EN_Pos;  // Включаем тактирование
-  //RCC->AHB1ENR |= 1 << RCC_AHB1ENR_DMA1EN_Pos;  // Включаем тактирование DMA1
+  // RCC->AHB1ENR |= 1 << RCC_AHB1ENR_DMA1EN_Pos;  // Включаем тактирование DMA1
 }
 
 void Config_GPIO_I2C()
@@ -55,20 +55,16 @@ void Config_I2C()
   /* Configure I2Cx: Rise Time */
   I2C1->TRISE |= I2C_Rise_Time(freqrange, CLOCK_SPEED) << I2C_TRISE_TRISE_Pos;
 
-  /* Configure I2Cx: Speed */
   I2C1->CCR |= I2C_Speed(pclk1, CLOCK_SPEED, 0); // << (I2C_CCR_FS_Pos | I2C_CCR_DUTY_Pos | I2C_CCR_CCR_Pos);
 
-  /* Configure I2Cx: Generalcall and NoStretch mode */
   I2C1->CR1 |= (0 | 0) << (I2C_CR1_ENGC_Pos | I2C_CR1_NOSTRETCH_Pos);
 
-  /* Configure I2Cx: Own Address1 and addressing mode */
   I2C1->OAR1 |= (I2C_ADDRESSINGMODE_7BIT | 0) << (I2C_OAR1_ADDMODE_Pos | I2C_OAR1_ADD0_Pos);
 
-  /* Configure I2Cx: Dual mode and Own Address2 */
   I2C1->OAR2 |= (0 | 0) << (I2C_OAR2_ENDUAL_Pos | I2C_OAR2_ADD2_Pos);
-	
-	//I2C1->CR2 |=1 << I2C_CR2_DMAEN_Pos;
-  /* Enable the selected I2C peripheral */
+
+  // I2C1->CR2 |=1 << I2C_CR2_DMAEN_Pos;
+
   I2C1->CR1 |= 1 << I2C_CR1_PE_Pos;
   NVIC_SetPriority(I2C1_EV_IRQn, 1); // Установите приоритет
   NVIC_EnableIRQ(I2C1_EV_IRQn);
@@ -76,47 +72,47 @@ void Config_I2C()
 
 void Config_I2C_DMA1()
 {
-    //Stream 6-Channel 1 I2C1_TX, Stream 5 Channel 1 I2C1_RX = 000: channel 0 selected
-    DMA1_Stream6->CR = 0;
-    DMA1_Stream6->CR |= 1 << DMA_SxCR_CHSEL_Pos;  // tream 6-Channel 1 I2C1_TX
-    DMA1_Stream6->CR |= 0 << DMA_SxCR_MBURST_Pos;//Конфигурация передачи пакета памяти
-    DMA1_Stream6->CR |= 0 << DMA_SxCR_PBURST_Pos;//Конфигурация периферийной пакетной передачи
-    DMA1_Stream6->CR |= 0 << DMA_SxCR_PL_Pos;//уровень приоритета
-    DMA1_Stream6->CR |= 0 << DMA_SxCR_PINCOS_Pos;//размер смещения периферийного приращения связан с PSIZE
-    DMA1_Stream6->CR |= 0 << DMA_SxCR_MSIZE_Pos;//Размер данных памяти1
-    DMA1_Stream6->CR |= 0 << DMA_SxCR_PSIZE_Pos;//Размер периферийных данных
-    DMA1_Stream6->CR |= 1 << DMA_SxCR_MINC_Pos;//Режим приращения памяти
-    DMA1_Stream6->CR |= 0 << DMA_SxCR_PINC_Pos;//Режим приращения периферийных устройств
-    DMA1_Stream6->CR |= 0 << DMA_SxCR_CIRC_Pos;//кольцевой режим
-    DMA1_Stream6->CR |= 1 << DMA_SxCR_DIR_Pos;//направление передачи данных 00: периферийное устройство-память 01: память-периферийное устройство
-    DMA1_Stream6->CR |= 1 << DMA_SxCR_TCIE_Pos;//Разрешение прерывания завершения передачи
-    DMA1_Stream6->PAR = (uint32_t)(&I2C1->DR);// Адрес регистра данных I2C1
-    DMA1_Stream6->NDTR = 0;//размер массива
-    DMA1_Stream6->M0AR = 0;// Адрес буфера
-    DMA1_Stream6->CR |= 1 << DMA_SxCR_EN_Pos;//включение потока
+  // Stream 6-Channel 1 I2C1_TX, Stream 5 Channel 1 I2C1_RX = 000: channel 0 selected
+  DMA1_Stream6->CR = 0;
+  DMA1_Stream6->CR |= 1 << DMA_SxCR_CHSEL_Pos;  // tream 6-Channel 1 I2C1_TX
+  DMA1_Stream6->CR |= 0 << DMA_SxCR_MBURST_Pos; // Конфигурация передачи пакета памяти
+  DMA1_Stream6->CR |= 0 << DMA_SxCR_PBURST_Pos; // Конфигурация периферийной пакетной передачи
+  DMA1_Stream6->CR |= 0 << DMA_SxCR_PL_Pos;     // уровень приоритета
+  DMA1_Stream6->CR |= 0 << DMA_SxCR_PINCOS_Pos; // размер смещения периферийного приращения связан с PSIZE
+  DMA1_Stream6->CR |= 0 << DMA_SxCR_MSIZE_Pos;  // Размер данных памяти1
+  DMA1_Stream6->CR |= 0 << DMA_SxCR_PSIZE_Pos;  // Размер периферийных данных
+  DMA1_Stream6->CR |= 1 << DMA_SxCR_MINC_Pos;   // Режим приращения памяти
+  DMA1_Stream6->CR |= 0 << DMA_SxCR_PINC_Pos;   // Режим приращения периферийных устройств
+  DMA1_Stream6->CR |= 0 << DMA_SxCR_CIRC_Pos;   // кольцевой режим
+  DMA1_Stream6->CR |= 1 << DMA_SxCR_DIR_Pos;    // направление передачи данных 00: периферийное устройство-память 01: память-периферийное устройство
+  DMA1_Stream6->CR |= 1 << DMA_SxCR_TCIE_Pos;   // Разрешение прерывания завершения передачи
+  DMA1_Stream6->PAR = (uint32_t)(&I2C1->DR);    // Адрес регистра данных I2C1
+  DMA1_Stream6->NDTR = 0;                       // размер массива
+  DMA1_Stream6->M0AR = 0;                       // Адрес буфера
+  DMA1_Stream6->CR |= 1 << DMA_SxCR_EN_Pos;     // включение потока
 
-    DMA1_Stream5->CR = 0;
-    DMA1_Stream5->CR |= 1 << DMA_SxCR_CHSEL_Pos;  // Stream 5 Channel 1 I2C1_RX
-    DMA1_Stream5->CR |= 0 << DMA_SxCR_MBURST_Pos;//Конфигурация передачи пакета памяти
-    DMA1_Stream5->CR |= 0 << DMA_SxCR_PBURST_Pos;//Конфигурация периферийной пакетной передачи
-    DMA1_Stream5->CR |= 0 << DMA_SxCR_PL_Pos;//уровень приоритета
-    DMA1_Stream5->CR |= 0 << DMA_SxCR_PINCOS_Pos;//размер смещения периферийного приращения связан с PSIZE
-    DMA1_Stream5->CR |= 2 << DMA_SxCR_MSIZE_Pos;//Размер данных памяти
-    DMA1_Stream5->CR |= 2 << DMA_SxCR_PSIZE_Pos;//Размер периферийных данных
-    DMA1_Stream5->CR |= 1 << DMA_SxCR_MINC_Pos;//Режим приращения памяти
-    DMA1_Stream5->CR |= 1 << DMA_SxCR_PINC_Pos;//Режим приращения периферийных устройств
-    DMA1_Stream5->CR |= 0 << DMA_SxCR_CIRC_Pos;//кольцевой режим
-    DMA1_Stream5->CR |= 0 << DMA_SxCR_DIR_Pos;//направление передачи данных 00: периферийное устройство-память 01: память-периферийное устройство
-    DMA1_Stream5->CR |= 1 << DMA_SxCR_TCIE_Pos;//Разрешение прерывания завершения передачи
-    DMA1_Stream5->PAR = (uint32_t)(&I2C1->DR);// Адрес регистра данных I2C1
-    DMA1_Stream5->NDTR = 1;//размер массива
-    DMA1_Stream5->M0AR = (uint32_t)dataBufRx;// Адрес буфера
-    DMA1_Stream5->CR |= 1 << DMA_SxCR_EN_Pos;//включение потока
+  DMA1_Stream5->CR = 0;
+  DMA1_Stream5->CR |= 1 << DMA_SxCR_CHSEL_Pos;  // Stream 5 Channel 1 I2C1_RX
+  DMA1_Stream5->CR |= 0 << DMA_SxCR_MBURST_Pos; // Конфигурация передачи пакета памяти
+  DMA1_Stream5->CR |= 0 << DMA_SxCR_PBURST_Pos; // Конфигурация периферийной пакетной передачи
+  DMA1_Stream5->CR |= 0 << DMA_SxCR_PL_Pos;     // уровень приоритета
+  DMA1_Stream5->CR |= 0 << DMA_SxCR_PINCOS_Pos; // размер смещения периферийного приращения связан с PSIZE
+  DMA1_Stream5->CR |= 0 << DMA_SxCR_MSIZE_Pos;  // Размер данных памяти
+  DMA1_Stream5->CR |= 0 << DMA_SxCR_PSIZE_Pos;  // Размер периферийных данных
+  DMA1_Stream5->CR |= 0 << DMA_SxCR_MINC_Pos;   // Режим приращения памяти
+  DMA1_Stream5->CR |= 0 << DMA_SxCR_PINC_Pos;   // Режим приращения периферийных устройств
+  DMA1_Stream5->CR |= 1 << DMA_SxCR_CIRC_Pos;   // кольцевой режим
+  DMA1_Stream5->CR |= 0 << DMA_SxCR_DIR_Pos;    // направление передачи данных 00: периферийное устройство-память 01: память-периферийное устройство
+  DMA1_Stream5->CR |= 1 << DMA_SxCR_TCIE_Pos;   // Разрешение прерывания завершения передачи
+  DMA1_Stream5->PAR = (uint32_t)(&I2C1->DR);    // Адрес регистра данных I2C1
+  DMA1_Stream5->NDTR = 1;                       // размер массива
+  DMA1_Stream5->M0AR = (uint32_t)dataBufRx;     // Адрес буфера
+  DMA1_Stream5->CR |= 1 << DMA_SxCR_EN_Pos;     // включение потока
 
-    DMA1->HIFCR |= 1 << DMA_HIFCR_CHTIF6_Pos;
-    DMA1->HIFCR |= 1 << DMA_HIFCR_CTCIF5_Pos;
-    NVIC_EnableIRQ(DMA1_Stream6_IRQn);// Включение прерываний DMA
-    NVIC_EnableIRQ(DMA1_Stream5_IRQn);// Включение прерываний DMA
+  DMA1->HIFCR |= 1 << DMA_HIFCR_CHTIF6_Pos;
+  DMA1->HIFCR |= 1 << DMA_HIFCR_CTCIF5_Pos;
+  NVIC_EnableIRQ(DMA1_Stream6_IRQn); // Включение прерываний DMA
+  NVIC_EnableIRQ(DMA1_Stream5_IRQn); // Включение прерываний DMA
 }
 /////////////
 
@@ -470,8 +466,8 @@ uint8_t I2C_Master_TransmitDMA(uint16_t DevAddress, uint8_t *pData, uint16_t Siz
   {
     /* Write data to DR */
     I2C1->DR = *pData;
-			//Transmit_I2C_DMA(pData,1);
-			
+    // Transmit_I2C_DMA(pData,1);
+
     /* Increment Buffer pointer */
     pData++;
     Size--;
@@ -491,44 +487,40 @@ uint8_t I2C_Master_TransmitDMA(uint16_t DevAddress, uint8_t *pData, uint16_t Siz
   return 0;
 }
 
-uint8_t * Receive_I2C_DMA()
+uint8_t *Receive_I2C_DMA()
 {
-	return dataBufRx;
+  return dataBufRx;
 }
 
-void Transmit_I2C_DMA(uint8_t *data,uint16_t Size)
+void Transmit_I2C_DMA(uint8_t *data, uint16_t Size)
 {
 
-    DMA1_Stream6->CR &= ~DMA_SxCR_EN;
-    DMA1_Stream6->NDTR = Size;		
-    DMA1_Stream6->M0AR = (uint32_t)data; // Указание адреса буфера передачи
-    DMA1_Stream6->CR |= DMA_SxCR_EN;     // Включаем DMA
+  DMA1_Stream6->CR &= ~DMA_SxCR_EN;
+  DMA1_Stream6->NDTR = Size;
+  DMA1_Stream6->M0AR = (uint32_t)data; // Указание адреса буфера передачи
+  DMA1_Stream6->CR |= DMA_SxCR_EN;     // Включаем DMA
 }
-
-
 
 ////IRQ
 void DMA1_Stream6_IRQHandler(void)
 {
-    LED7();
-		
-    if (DMA1->HISR & DMA_HISR_TCIF6)
-    {
-        DMA1->HIFCR |= DMA_HIFCR_CTCIF6; // Сбрасываем флаг
-    }
+  LED7();
+
+  if (DMA1->HISR & DMA_HISR_TCIF6)
+  {
+    DMA1->HIFCR |= DMA_HIFCR_CTCIF6; // Сбрасываем флаг
+  }
 }
 
 void DMA1_Stream5_IRQHandler(void)
 {
-    LED6();
-		
-    if (DMA1->LISR & DMA_HISR_TCIF5)
-    {
-        DMA1->HIFCR |= DMA_HIFCR_CTCIF5; // Сбрасываем флаг
-    }
+  LED6();
+
+  if (DMA1->LISR & DMA_HISR_TCIF5)
+  {
+    DMA1->HIFCR |= DMA_HIFCR_CTCIF5; // Сбрасываем флаг
+  }
 }
-
-
 
 void Error_Handler(void)
 {

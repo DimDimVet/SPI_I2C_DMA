@@ -7,7 +7,7 @@ int main()
 	
 	while(1)
 	{
-
+			//SPI_TransmitReceive();
 	}
 	return 0;
 }

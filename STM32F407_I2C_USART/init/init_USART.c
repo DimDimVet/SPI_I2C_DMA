@@ -11,7 +11,7 @@ void Enable_RCC_USART1(void)
 {
 	RCC->AHB1ENR |= 1 << RCC_AHB1ENR_GPIOAEN_Pos;  // Включаем тактирование порта A
 	RCC->APB2ENR |= 1 << RCC_APB2ENR_USART1EN_Pos; // Включаем тактирование Usart1
-	// RCC->AHB1ENR |= 1 << RCC_AHB1ENR_DMA2EN_Pos; // Включаем тактирование DMA2
+												   // RCC->AHB1ENR |= 1 << RCC_AHB1ENR_DMA2EN_Pos; // Включаем тактирование DMA2
 }
 
 void Config_GPIO_USART1(void)
@@ -39,40 +39,34 @@ void Config_USART1(uint16_t baudRate)
 											  //    USART1->CR3 |= 1 << USART_CR3_DMAT_Pos;
 
 	USART1->CR1 |= 1 << USART_CR1_UE_Pos; // Включить USART1
-	NVIC_SetPriority(USART1_IRQn, 2); // Установите приоритет
-	NVIC_EnableIRQ(USART1_IRQn); // Разрешить прерывания для USART2
+	NVIC_SetPriority(USART1_IRQn, 2);	  // Установите приоритет
+	NVIC_EnableIRQ(USART1_IRQn);		  // Разрешить прерывания для USART2
 }
 
 // IRQ
 void USART1_IRQHandler(void)
 {
-	//LED7();
+	// LED7();
 	//
 	ExecutorTerminal_USART_Irq();
 	//
-	//LED7();
+	// LED7();
 }
 ///
 
-void USART1_ReadString(uint8_t *data, uint8_t size_buf) // считываем регистр
+void USART1_ReadChar(char *ch)
 {
-	for (int i = 0; i < size_buf; i++)
+	if (USART1->SR & USART_SR_RXNE)
 	{
-		while (!(USART1->SR & USART_SR_RXNE))
-		{
-		};
-//		if (!(USART1->SR & USART_SR_RXNE))
-//		{
-//		};
+		char temp = USART1->DR;
 
-		uint8_t temp = USART1->DR;
-		data[i] = temp;
+		ch[0] = temp;
 	}
 }
 
-void USART1_SetString(uint8_t *str) // Установка строки по символьно
+void USART1_SetString(char* str) // Установка строки по символьно
 {
-	uint8_t size = strlen((char*)str);
+	uint8_t size = strlen(str);
 	
 	if(size==0){return;}
 	
