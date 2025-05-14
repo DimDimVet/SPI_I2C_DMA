@@ -60,12 +60,10 @@ void Config_SPI1(void)
 }
 
 // IRQ
-//void SPI2_IRQHandler(void)
-//{
-//	
-//}
+void SPI2_IRQHandler(void)
+{
 
-
+}
 ////
 uint8_t SPI2_ReadBayt()
 {

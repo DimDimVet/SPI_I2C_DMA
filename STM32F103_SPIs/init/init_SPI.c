@@ -123,12 +123,32 @@ uint8_t SPI_TransmitReceive()
 ///
 void ExecutorData(uint8_t *data)
 {
+	//set_infoStr
+	uint8_t size = strlen(set_infoStr);
+	for(int i = 0; i < size; i++)
+	{
+		data[i]=set_infoStr[i];
+	}
+	
 	for(int i = 0; i < SIZE_BUF_SPI; i++)
 	{
+		
 		SPI1_SetBayt(data[i]);
 	}
 	__enable_irq();
 }
+
+void Tick()
+{
+//	if((countSPI >= SIZE_BUF_SPI))
+//	{
+//		__disable_irq();
+//		countSPI=0;
+
+//		ExecutorData(dataBufSPI_);
+//	}	
+}
+
 /////IRQ
 void SPI1_IRQHandler(void)
 {
@@ -137,25 +157,10 @@ void SPI1_IRQHandler(void)
 //	
 //	SPI1_SetBayt(data); //test
 
-//	if((countSPI >= SIZE_BUF_SPI-2))
-//	{
-//		__disable_irq();
-//		countSPI=0;
 
-//		ExecutorData(dataBufSPI_);
-//	}	
-
-//	if((countSPI >= 9))
-//	{
-//		__disable_irq();
-//		countSPI=0;
-
-//		ExecutorData(dataBufSPI_);
-//	}	
-	
 	if((countSPI >= SIZE_BUF_SPI))
 	{
-		//__disable_irq();
+		__disable_irq();
 		countSPI=0;
 
 		ExecutorData(dataBufSPI_);
@@ -164,14 +169,6 @@ void SPI1_IRQHandler(void)
 	{
 		dataBufSPI_[countSPI]=SPI1_ReadBayt();
 		countSPI++;	
-		
-//		if((countSPI == SIZE_BUF_SPI))
-//			{
-//				__disable_irq();
-//				countSPI=0;
-
-//				ExecutorData(dataBufSPI_);
-//			}	
 	}
 
 }

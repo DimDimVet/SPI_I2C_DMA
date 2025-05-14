@@ -7,6 +7,7 @@ int main()
 	
 	while(1)
 	{
+			//Tick();
 			//SPI_TransmitReceive();
 	}
 	return 0;

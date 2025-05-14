@@ -16,6 +16,7 @@ void Config_SPI1(void);      // spi
 uint8_t SPI1_ReadBayt(void);
 void SPI1_SetBayt(uint8_t byte);
 void ExecutorData(uint8_t *data);
+void Tick(void);
 
 uint8_t SPI_TransmitReceive(void);//test
 
