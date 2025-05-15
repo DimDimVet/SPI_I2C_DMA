@@ -12,10 +12,17 @@ void Init_SPI(void);         // config spi
 void Enable_RCC_SPI1(void);  // прерывание
 void Config_GPIO_SPI1(void); // порты spi
 void Config_SPI1(void);      // spi
+void Config_SPI1_DMA1(void);
 
 uint8_t SPI1_ReadBayt(void);
 void SPI1_SetBayt(uint8_t byte);
 void ExecutorData(uint8_t *data);
+
+void SPI1_DMA1_ReadChar(char *ch);
+void SPI1_DMA1_SetString(char *str);
+
+void Executor_SPI_DMA_RX_Irq(void);
+//void Executor_SPI_DMA_TX_Irq(void);
 
 uint8_t SPI_TransmitReceive(void);//test
 

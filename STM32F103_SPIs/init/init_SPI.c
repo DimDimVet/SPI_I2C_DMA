@@ -123,7 +123,6 @@ uint8_t SPI_TransmitReceive()
 ///
 void ExecutorData(uint8_t *data)
 {
-	//set_infoStr
 	uint8_t size = strlen(set_infoStr);
 	for(int i = 0; i < size; i++)
 	{
@@ -132,14 +131,20 @@ void ExecutorData(uint8_t *data)
 	
 	for(int i = 0; i < SIZE_BUF_SPI; i++)
 	{
-		
 		SPI1_SetBayt(data[i]);
 	}
 	__enable_irq();
 }
 
-void Tick()
+/////IRQ
+void SPI1_IRQHandler(void)
 {
+
+	data=SPI1_ReadBayt(); //test
+	
+	SPI1_SetBayt(data); //test
+
+
 //	if((countSPI >= SIZE_BUF_SPI))
 //	{
 //		__disable_irq();
@@ -147,28 +152,10 @@ void Tick()
 
 //		ExecutorData(dataBufSPI_);
 //	}	
-}
-
-/////IRQ
-void SPI1_IRQHandler(void)
-{
-
-//	data=SPI1_ReadBayt(); //test
-//	
-//	SPI1_SetBayt(data); //test
-
-
-	if((countSPI >= SIZE_BUF_SPI))
-	{
-		__disable_irq();
-		countSPI=0;
-
-		ExecutorData(dataBufSPI_);
-	}	
-	else
-	{
-		dataBufSPI_[countSPI]=SPI1_ReadBayt();
-		countSPI++;	
-	}
+//	else
+//	{
+//		dataBufSPI_[countSPI]=SPI1_ReadBayt();
+//		countSPI++;	
+//	}
 
 }
