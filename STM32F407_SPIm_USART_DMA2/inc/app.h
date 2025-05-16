@@ -11,8 +11,8 @@
 static	char rezultReadConsol_[SIZE_BUF_USART];
 static 	char *rezultReadConsol=rezultReadConsol_;
 
-//static	char rezultReadSPI_[SIZE_BUF_USART];
-//static	char *rezultReadSPI=rezultReadSPI_;
+static char rezultReadSPI_[SIZE_BUF_USART];
+static char *rezultReadSPI = rezultReadSPI_;
 
 static char receivedChar_;
 static char *receivedChar=&receivedChar_;

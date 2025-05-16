@@ -5,13 +5,14 @@ void Init_SPI(void)
     Enable_RCC_SPI1();
     Config_GPIO_SPI1();
     Config_SPI1();
+		Config_SPI1_DMA1();
 }
 
 void Enable_RCC_SPI1(void)
 {
     RCC->AHB1ENR |= 1 << RCC_AHB1ENR_GPIOBEN_Pos; // Включаем тактирование порта B
     RCC->APB1ENR |= 1 << RCC_APB1ENR_SPI2EN_Pos;  // Включаем тактирование SPI2
-    // RCC->AHB1ENR |= 1 << RCC_AHB1ENR_DMA1EN_Pos;  // Включаем тактирование DMA1
+    RCC->AHB1ENR |= 1 << RCC_AHB1ENR_DMA1EN_Pos;  // Включаем тактирование DMA1
 }
 
 void Config_GPIO_SPI1(void)
@@ -51,19 +52,60 @@ void Config_SPI1(void)
     SPI2->CR1 |= 1 << SPI_CR1_CPHA_Pos;     // фаза...
 
     SPI2->CR2 = 0;
-    // SPI2->CR2 |= 1 << SPI_CR2_RXDMAEN_Pos;// Включаем DMA
-    // SPI2->CR2 |= 1 << SPI_CR2_TXDMAEN_Pos;// Включаем DMA
+    SPI2->CR2 |= 1 << SPI_CR2_RXDMAEN_Pos;// Включаем DMA
+    SPI2->CR2 |= 1 << SPI_CR2_TXDMAEN_Pos;// Включаем DMA
     //SPI2->CR2 = SPI_CR2_RXNEIE; // | SPI_CR2_TXEIE;
     NVIC_EnableIRQ(SPI2_IRQn);  // Включаем прерывание SPI2
 
     SPI2->CR1 |= 1 << SPI_CR1_SPE_Pos; // Вкл SPI
 }
 
-// IRQ
-void SPI2_IRQHandler(void)
+void Config_SPI1_DMA1()
 {
+    //Stream 3-Channel 0 SPI2_RX, Stream 4 Channel 0 SPI2_TX = 000: channel 0 selected
+    DMA1_Stream4->CR = 0;
+    DMA1_Stream4->CR |= 0 << DMA_SxCR_CHSEL_Pos;  // Stream 4 Channel 0 SPI2_TX
+    DMA1_Stream4->CR |= 0 << DMA_SxCR_MBURST_Pos;//Конфигурация передачи пакета памяти
+    DMA1_Stream4->CR |= 0 << DMA_SxCR_PBURST_Pos;//Конфигурация периферийной пакетной передачи
+    DMA1_Stream4->CR |= 0 << DMA_SxCR_PL_Pos;//уровень приоритета
+    DMA1_Stream4->CR |= 0 << DMA_SxCR_PINCOS_Pos;//размер смещения периферийного приращения связан с PSIZE
+    DMA1_Stream4->CR |= 0 << DMA_SxCR_MSIZE_Pos;//Размер данных памяти1
+    DMA1_Stream4->CR |= 0 << DMA_SxCR_PSIZE_Pos;//Размер периферийных данных
+    DMA1_Stream4->CR |= 1 << DMA_SxCR_MINC_Pos;//Режим приращения памяти
+    DMA1_Stream4->CR |= 0 << DMA_SxCR_PINC_Pos;//Режим приращения периферийных устройств
+    DMA1_Stream4->CR |= 0 << DMA_SxCR_CIRC_Pos;//кольцевой режим
+    DMA1_Stream4->CR |= 1 << DMA_SxCR_DIR_Pos;//направление передачи данных 00: периферийное устройство-память 01: память-периферийное устройство
+    DMA1_Stream4->CR |= 1 << DMA_SxCR_TCIE_Pos;//Разрешение прерывания завершения передачи
+    DMA1_Stream4->PAR = (uint32_t)(&SPI2->DR);// Адрес регистра данных spi
+    DMA1_Stream4->NDTR = 0;//размер массива
+    DMA1_Stream4->M0AR = 0;// Адрес буфера
+    DMA1_Stream4->CR |= 1 << DMA_SxCR_EN_Pos;//включение потока
 
+    DMA1_Stream3->CR = 0;
+    DMA1_Stream3->CR |= 0 << DMA_SxCR_CHSEL_Pos;  // Stream 3-Channel 0 SPI2_RX
+    DMA1_Stream3->CR |= 0 << DMA_SxCR_MBURST_Pos;//Конфигурация передачи пакета памяти
+    DMA1_Stream3->CR |= 0 << DMA_SxCR_PBURST_Pos;//Конфигурация периферийной пакетной передачи
+    DMA1_Stream3->CR |= 0 << DMA_SxCR_PL_Pos;//уровень приоритета
+    DMA1_Stream3->CR |= 0 << DMA_SxCR_PINCOS_Pos;//размер смещения периферийного приращения связан с PSIZE
+    DMA1_Stream3->CR |= 1 << DMA_SxCR_MSIZE_Pos;//Размер данных памяти
+    DMA1_Stream3->CR |= 1 << DMA_SxCR_PSIZE_Pos;//Размер периферийных данных
+    DMA1_Stream3->CR |= 1 << DMA_SxCR_MINC_Pos;//Режим приращения памяти
+    DMA1_Stream3->CR |= 1 << DMA_SxCR_PINC_Pos;//Режим приращения периферийных устройств
+    DMA1_Stream3->CR |= 1 << DMA_SxCR_CIRC_Pos;//кольцевой режим
+    DMA1_Stream3->CR |= 0 << DMA_SxCR_DIR_Pos;//направление передачи данных 00: периферийное устройство-память 01: память-периферийное устройство
+    DMA1_Stream3->CR |= 1 << DMA_SxCR_TCIE_Pos;//Разрешение прерывания завершения передачи
+    DMA1_Stream3->PAR = (uint32_t)(&SPI2->DR);// Адрес регистра данных spi
+    DMA1_Stream3->NDTR = 5;//размер массива
+    DMA1_Stream3->M0AR = (uint32_t)dataBufRxSPI;// Адрес буфера
+    DMA1_Stream3->CR |= 1 << DMA_SxCR_EN_Pos;//включение потока
+
+    DMA1->HIFCR |= 1 << DMA_HIFCR_CHTIF4_Pos;
+    DMA1->LIFCR |= 1 << DMA_LIFCR_CTCIF3_Pos;
+    NVIC_EnableIRQ(DMA1_Stream4_IRQn);// Включение прерываний DMA
+    NVIC_EnableIRQ(DMA1_Stream3_IRQn);// Включение прерываний DMA
 }
+
+
 ////
 uint8_t SPI2_ReadBayt()
 {
@@ -91,7 +133,27 @@ uint8_t SPI2_SetBayt(char byte)
 
     return 1;
 }
+/////spi
+char SPI1_DMA1_ReadChar() // считываем регистр
+{
+//		for(int i=0; i < 10; i++)
+//		{
+			return dataBufRxSPI[0];
+//		}
+		
+}
 
+void SPI1_DMA1_SetString(char *str) // Установка строки по символьно
+{
+
+	DMA1_Stream4->CR &= ~DMA_SxCR_EN;
+
+	uint8_t sizeTxU = strlen(str);
+
+	DMA1_Stream4->NDTR = sizeTxU;
+	DMA1_Stream4->M0AR = (uint32_t)str;
+	DMA1_Stream4->CR |= DMA_SxCR_EN;
+}
 //uint8_t SPI2_TransmitReceive(uint8_t data)
 //{
 //    while (!(SPI2->SR & SPI_SR_TXE))
@@ -104,3 +166,32 @@ uint8_t SPI2_SetBayt(char byte)
 //    }
 //    return SPI2->DR;
 //}
+
+// IRQ
+void SPI2_IRQHandler(void)
+{
+
+}
+
+void DMA1_Stream4_IRQHandler(void)
+{
+    //LED7();
+		
+    if (DMA1->HISR & DMA_HISR_TCIF4)
+    {
+//			Executor_SPI_DMA_TX_Irq();
+        DMA1->HIFCR |= DMA_HIFCR_CTCIF4; // Сбрасываем флаг
+    }
+}
+
+void DMA1_Stream3_IRQHandler(void)
+{
+    //LED6();
+		
+    if (DMA1->LISR & DMA_LISR_TCIF3)
+    {
+				Executor_SPI_DMA_RX_Irq();
+				
+        DMA1->LIFCR |= DMA_LIFCR_CTCIF3; // Сбрасываем флаг
+    }
+}
