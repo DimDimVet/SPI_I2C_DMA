@@ -87,15 +87,15 @@ void Config_SPI1_DMA1()
     DMA1_Stream3->CR |= 0 << DMA_SxCR_PBURST_Pos;//Конфигурация периферийной пакетной передачи
     DMA1_Stream3->CR |= 0 << DMA_SxCR_PL_Pos;//уровень приоритета
     DMA1_Stream3->CR |= 0 << DMA_SxCR_PINCOS_Pos;//размер смещения периферийного приращения связан с PSIZE
-    DMA1_Stream3->CR |= 1 << DMA_SxCR_MSIZE_Pos;//Размер данных памяти
-    DMA1_Stream3->CR |= 1 << DMA_SxCR_PSIZE_Pos;//Размер периферийных данных
+    DMA1_Stream3->CR |= 0 << DMA_SxCR_MSIZE_Pos;//Размер данных памяти
+    DMA1_Stream3->CR |= 0 << DMA_SxCR_PSIZE_Pos;//Размер периферийных данных
     DMA1_Stream3->CR |= 1 << DMA_SxCR_MINC_Pos;//Режим приращения памяти
     DMA1_Stream3->CR |= 1 << DMA_SxCR_PINC_Pos;//Режим приращения периферийных устройств
     DMA1_Stream3->CR |= 1 << DMA_SxCR_CIRC_Pos;//кольцевой режим
     DMA1_Stream3->CR |= 0 << DMA_SxCR_DIR_Pos;//направление передачи данных 00: периферийное устройство-память 01: память-периферийное устройство
     DMA1_Stream3->CR |= 1 << DMA_SxCR_TCIE_Pos;//Разрешение прерывания завершения передачи
     DMA1_Stream3->PAR = (uint32_t)(&SPI2->DR);// Адрес регистра данных spi
-    DMA1_Stream3->NDTR = 5;//размер массива
+    DMA1_Stream3->NDTR = 1;//размер массива
     DMA1_Stream3->M0AR = (uint32_t)dataBufRxSPI;// Адрес буфера
     DMA1_Stream3->CR |= 1 << DMA_SxCR_EN_Pos;//включение потока
 
@@ -145,13 +145,21 @@ char SPI1_DMA1_ReadChar() // считываем регистр
 
 void SPI1_DMA1_SetString(char *str) // Установка строки по символьно
 {
-
 	DMA1_Stream4->CR &= ~DMA_SxCR_EN;
 
 	uint8_t sizeTxU = strlen(str);
 
 	DMA1_Stream4->NDTR = sizeTxU;
 	DMA1_Stream4->M0AR = (uint32_t)str;
+	DMA1_Stream4->CR |= DMA_SxCR_EN;
+}
+
+void SPI1_DMA1_SetChar(char *ch) // Установка строки по символьно
+{
+	DMA1_Stream4->CR &= ~DMA_SxCR_EN;
+
+	DMA1_Stream4->NDTR = 1;
+	DMA1_Stream4->M0AR = (uint32_t)ch;
 	DMA1_Stream4->CR |= DMA_SxCR_EN;
 }
 //uint8_t SPI2_TransmitReceive(uint8_t data)

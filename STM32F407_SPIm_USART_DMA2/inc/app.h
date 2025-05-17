@@ -8,6 +8,9 @@
 
 #define BAUND_RATE 9600
 
+//static char receivedCharSPI_;
+//static char *receivedCharSPI = &receivedCharSPI_;
+
 static	char rezultReadConsol_[SIZE_BUF_USART];
 static 	char *rezultReadConsol=rezultReadConsol_;
 

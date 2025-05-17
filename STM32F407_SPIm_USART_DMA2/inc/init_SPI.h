@@ -21,6 +21,7 @@ uint8_t SPI2_SetBayt(char byte);
 
 char SPI1_DMA1_ReadChar(void);
 void SPI1_DMA1_SetString(char *str);
+void SPI1_DMA1_SetChar(char *ch);
 
 void Executor_SPI_DMA_RX_Irq(void);
 //void Executor_SPI_DMA_TX_Irq(void);
